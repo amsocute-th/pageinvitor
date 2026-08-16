@@ -307,7 +307,7 @@ setInterval(async () => {
   const data = await chrome.storage.local.get(["activeCode", "tokenBalance"]);
   if (data.activeCode && data.tokenBalance !== undefined) {
     try {
-      await fetch("http://localhost:8001/api/tokens/sync", {
+      await fetch("https://racego-backend.onrender.com/api/tokens/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code: data.activeCode, balance: data.tokenBalance })

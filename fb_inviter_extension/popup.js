@@ -143,7 +143,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     try {
       // Validate via Flask backend API
-      const response = await fetch("http://localhost:8001/api/tokens/validate", {
+      const response = await fetch("https://racego-backend.onrender.com/api/tokens/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code: inputCode })
