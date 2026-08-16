@@ -101,12 +101,16 @@ def analyze_comments():
             
         total_likes_needed = 0
         total_replies_needed = 0
+        like_only_count = 0
+        reply_only_count = 0
+        both_count = 0
+        spam_count = 0
         detailed_comments = []
         
         for pid in post_ids:
             url = f"https://graph.facebook.com/v22.0/{pid}/comments"
             params = {
-                "fields": "id,message,from,created_time,user_likes,comments{from,message}",
+                "fields": "id,message,from,created_time,user_likes,message_tags,comments{from,message}",
                 "limit": 150,
                 "access_token": PAGE_ACCESS_TOKEN
             }
@@ -118,20 +122,41 @@ def analyze_comments():
                 if c.get("from", {}).get("id") == PAGE_ID:
                     continue
                 
+                user_message = c.get("message", "")
                 is_liked = c.get("user_likes") is True
                 is_replied = has_already_replied(c)
-                has_text = has_meaningful_text(c.get("message", ""))
+                has_text = has_meaningful_text(user_message)
+                
+                # Detect tags/mentions (via Facebook's message_tags list)
+                has_tags = len(c.get("message_tags", [])) > 0 if isinstance(c.get("message_tags"), (list, dict)) else False
+                
+                is_spam = is_spam_comment(user_message)
                 
                 likes_needed = 1 if not is_liked else 0
-                replies_needed = 1 if (not is_replied and has_text) else 0
                 
-                total_likes_needed += likes_needed
-                total_replies_needed += replies_needed
+                # If it's a tag comment or spam, do NOT reply (replies_needed = 0). It becomes Like Only or Spam delete
+                if has_tags or is_spam:
+                    replies_needed = 0
+                else:
+                    replies_needed = 1 if (not is_replied and has_text) else 0
+                
+                # Calculate counts for summary
+                if is_spam:
+                    spam_count += 1
+                else:
+                    total_likes_needed += likes_needed
+                    total_replies_needed += replies_needed
+                    if likes_needed > 0 and replies_needed > 0:
+                        both_count += 1
+                    elif likes_needed > 0 and replies_needed == 0:
+                        like_only_count += 1
+                    elif likes_needed == 0 and replies_needed > 0:
+                        reply_only_count += 1
                 
                 proposed_reply = None
                 if replies_needed > 0 and generate:
                     if total_replies_needed <= 15:
-                        proposed_reply = generate_ai_reply(c.get("message", ""))
+                        proposed_reply = generate_ai_reply(user_message)
                     if not proposed_reply:
                         import random
                         proposed_reply = random.choice(FRIENDLY_REPLIES)
@@ -139,12 +164,13 @@ def analyze_comments():
                 detailed_comments.append({
                     "id": c.get("id"),
                     "user_name": c.get("from", {}).get("name", "User"),
-                    "message": c.get("message", ""),
+                    "message": user_message,
                     "likes_needed": likes_needed,
                     "replies_needed": replies_needed,
                     "proposed_reply": proposed_reply,
                     "is_emoji": not has_text,
-                    "is_spam": is_spam_comment(c.get("message", "")),
+                    "is_spam": is_spam,
+                    "has_tags": has_tags,
                     "post_id": pid
                 })
                 
@@ -153,7 +179,11 @@ def analyze_comments():
             "summary": {
                 "total_comments": len(detailed_comments),
                 "likes_needed": total_likes_needed,
-                "replies_needed": total_replies_needed
+                "replies_needed": total_replies_needed,
+                "like_only_count": like_only_count,
+                "reply_only_count": reply_only_count,
+                "both_count": both_count,
+                "spam_count": spam_count
             },
             "comments": detailed_comments
         })

@@ -328,6 +328,19 @@
                             <button class="btn btn-secondary" id="btn-delete-spam-batch" style="font-size: 0.8rem; padding: 6px 12px; display: none; background-color: rgba(231, 76, 60, 0.2); border-color: rgba(231, 76, 60, 0.4); color: #ff4a4a; font-weight: bold;">🗑️ ลบสแปมทั้งหมดที่ตรวจพบ</button>
                         </div>
                     </div>
+                    
+                    <!-- Audit Summary Sub-bar (Task summaries display) -->
+                    <div id="audit-summary-subbar" style="display: none; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; padding: 10px 14px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; font-size: 0.85rem;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span style="color:#cbd5e1; font-weight:600;">📋 สรุปรายการงาน (Action Summary):</span>
+                        </div>
+                        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                            <span style="background:rgba(52,152,219,0.1); color:#3498db; padding:2px 8px; border-radius:4px; font-weight:600;">👍 ไลก์อย่างเดียว: <span id="sum-like-only">0</span></span>
+                            <span style="background:rgba(155,89,182,0.1); color:#9b59b6; padding:2px 8px; border-radius:4px; font-weight:600;">💬 ตอบกลับอย่างเดียว: <span id="sum-reply-only">0</span></span>
+                            <span style="background:rgba(46,204,113,0.1); color:#2ecc71; padding:2px 8px; border-radius:4px; font-weight:600;">🔥 ไลก์ + ตอบกลับ: <span id="sum-both">0</span></span>
+                            <span style="background:rgba(231,76,60,0.1); color:#ff4a4a; padding:2px 8px; border-radius:4px; font-weight:600;">🚨 ตรวจพบสแปม: <span id="sum-spam">0</span></span>
+                        </div>
+                    </div>
 
                     <div style="overflow-x: auto; flex-grow: 1; max-height: 420px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;">
                         <table class="audit-table">
@@ -478,6 +491,13 @@
                 genSelectedBtn.style.display = 'inline-block';
                 replySelectedBtn.style.display = 'inline-block';
                 document.getElementById('btn-start-bot').disabled = false;
+
+                // Set Action Summary Counts from Backend
+                document.getElementById('sum-like-only').textContent = data.summary.like_only_count || 0;
+                document.getElementById('sum-reply-only').textContent = data.summary.reply_only_count || 0;
+                document.getElementById('sum-both').textContent = data.summary.both_count || 0;
+                document.getElementById('sum-spam').textContent = data.summary.spam_count || 0;
+                document.getElementById('audit-summary-subbar').style.display = 'flex';
 
                 let hasSpam = false;
 
