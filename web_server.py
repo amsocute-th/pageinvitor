@@ -624,6 +624,21 @@ def register_client_api():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+@app.route('/api/clients/approve-all', methods=['POST'])
+def approve_all_clients_api():
+    try:
+        clients = load_clients()
+        count = 0
+        for cid in clients:
+            if not clients[cid].get("approved", False):
+                clients[cid]["approved"] = True
+                count += 1
+        if count > 0:
+            save_clients(clients)
+        return jsonify({"success": True, "approved_count": count})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 @app.route('/api/clients/approve', methods=['POST'])
 def approve_client_api():
     try:

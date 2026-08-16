@@ -88,9 +88,12 @@
 
         <!-- Client Devices Management Card -->
         <div class="card glass" style="padding: 24px; align-items: stretch; margin-top: 25px; margin-bottom: 25px;">
-            <div class="card-title" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; font-size: 1.15rem;">
+            <div class="card-title" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; font-size: 1.15rem; flex-wrap: wrap; gap: 10px;">
                 <span>🖥️ การจัดการอนุมัติเครื่องผู้ใช้งาน (Client Device Approval Center)</span>
-                <button class="btn btn-secondary" id="btn-refresh-clients" style="font-size: 0.8rem; padding: 6px 12px;">🔄 รีเฟรชรายชื่อเครื่อง (Refresh)</button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-primary" id="btn-approve-all-clients" style="font-size: 0.8rem; padding: 6px 12px; background-color: rgba(46, 204, 113, 0.2); border-color: rgba(46, 204, 113, 0.3); color: #2ecc71; border: 1px solid rgba(46,204,113,0.3); font-weight: bold; cursor: pointer; border-radius: 6px;">✅ อนุมัติเครื่องที่รอทั้งหมด</button>
+                    <button class="btn btn-secondary" id="btn-refresh-clients" style="font-size: 0.8rem; padding: 6px 12px;">🔄 รีเฟรชรายชื่อเครื่อง (Refresh)</button>
+                </div>
             </div>
             
             <!-- Manual Approval form -->
@@ -314,6 +317,19 @@
                 if (!data.success) throw new Error(data.error);
                 alert(`อนุมัติสิทธิ์รหัสเครื่อง ${val} เรียบร้อยแล้ว!`);
                 document.getElementById('manual-client-id').value = '';
+                fetchClients();
+            } catch (err) {
+                alert('เกิดข้อผิดพลาด: ' + err.message);
+            }
+        });
+
+        document.getElementById('btn-approve-all-clients')?.addEventListener('click', async () => {
+            if (!confirm('คุณแน่ใจว่าต้องการอนุมัติสิทธิ์รหัสเครื่องใหม่ที่กำลังรอทั้งหมดทันที?')) return;
+            try {
+                const res = await fetch('/api/clients/approve-all', { method: 'POST' });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                alert(`ดำเนินการสำเร็จ! ออนุมัติสิทธิ์เพิ่มไปทั้งหมด ${data.approved_count} เครื่อง`);
                 fetchClients();
             } catch (err) {
                 alert('เกิดข้อผิดพลาด: ' + err.message);
