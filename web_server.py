@@ -793,6 +793,16 @@ def get_client_status_api():
             if code in tokens_db:
                 token_info = tokens_db[code]
                 
+                # Render ephemeral reset fallback: Auto-activate valid token codes on client query
+                if token_info.get("status") == "valid":
+                    token_info["status"] = "used"
+                    token_info["used_at"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    days = int(token_info.get("expiration_days", 30))
+                    expire_date = datetime.datetime.now() + datetime.timedelta(days=days)
+                    token_info["expires_at"] = expire_date.strftime("%Y-%m-%d %H:%M:%S")
+                    tokens_db[code] = token_info
+                    save_tokens(tokens_db)
+                
                 # Check expiration date
                 is_expired = False
                 if token_info.get("expires_at"):
