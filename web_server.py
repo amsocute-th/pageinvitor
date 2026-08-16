@@ -209,6 +209,7 @@ MONGODB_URI = os.getenv("MONGODB_URI")
 db_client = None
 mongo_db = None
 tokens_col = None
+clients_col = None
 
 if MONGODB_URI:
     try:
@@ -216,9 +217,58 @@ if MONGODB_URI:
         db_client = MongoClient(MONGODB_URI)
         mongo_db = db_client["racego_db"]
         tokens_col = mongo_db["tokens"]
+        clients_col = mongo_db["clients"]
         print("RaceGO Backend: Successfully connected to MongoDB Atlas!")
     except Exception as e:
         print(f"RaceGO Backend: Failed to connect to MongoDB: {e}")
+
+# Clients Database Helpers
+CLIENTS_FILE = "clients.json"
+
+def load_clients():
+    if clients_col is not None:
+        try:
+            clients = {}
+            for doc in clients_col.find():
+                cid = doc["_id"]
+                clients[cid] = {
+                    "approved": doc["approved"],
+                    "registered_at": doc.get("registered_at"),
+                    "last_seen_at": doc.get("last_seen_at")
+                }
+            return clients
+        except Exception as e:
+            print(f"Error loading clients from Mongo: {e}")
+            return {}
+    if os.path.exists(CLIENTS_FILE):
+        try:
+            import json
+            with open(CLIENTS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+def save_clients(clients):
+    if clients_col is not None:
+        try:
+            for cid, info in clients.items():
+                clients_col.update_one(
+                    {"_id": cid},
+                    {"$set": {
+                        "approved": info["approved"],
+                        "registered_at": info.get("registered_at"),
+                        "last_seen_at": info.get("last_seen_at")
+                    }},
+                    upsert=True
+                )
+            return
+        except Exception as e:
+            print(f"Error saving clients to Mongo: {e}")
+            return
+    import json
+    with open(CLIENTS_FILE, "w", encoding="utf-8") as f:
+        json.dump(clients, f, indent=4, ensure_ascii=False)
 
 # Token Database Helpers
 TOKENS_FILE = "tokens.json"
@@ -368,6 +418,80 @@ def sync_token_balance():
         
         save_tokens(tokens)
         return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# Client Approval APIs
+@app.route('/api/clients', methods=['GET'])
+def get_clients_api():
+    clients = load_clients()
+    return jsonify({"success": True, "clients": clients})
+
+@app.route('/api/clients/register', methods=['POST'])
+def register_client_api():
+    try:
+        data = request.get_json() or {}
+        cid = data.get('id', '').strip().upper()
+        if not cid:
+            return jsonify({"success": False, "error": "รหัสผู้ใช้ไม่ถูกต้อง (Invalid ID)"}), 400
+            
+        clients = load_clients()
+        if cid not in clients:
+            clients[cid] = {
+                "approved": False,
+                "registered_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "last_seen_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+            save_clients(clients)
+        else:
+            clients[cid]["last_seen_at"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            save_clients(clients)
+            
+        return jsonify({"success": True, "approved": clients[cid]["approved"]})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/clients/approve', methods=['POST'])
+def approve_client_api():
+    try:
+        data = request.get_json() or {}
+        cid = data.get('id', '').strip().upper()
+        action = data.get('action', 'approve') # 'approve' or 'revoke'
+        
+        if not cid:
+            return jsonify({"success": False, "error": "รหัสผู้ใช้ไม่ถูกต้อง"}), 400
+            
+        clients = load_clients()
+        if cid not in clients:
+            return jsonify({"success": False, "error": "ไม่พบผู้ใช้ในระบบ"}), 404
+            
+        clients[cid]["approved"] = (action == 'approve')
+        save_clients(clients)
+        
+        return jsonify({"success": True, "approved": clients[cid]["approved"]})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/clients/status', methods=['GET'])
+def get_client_status_api():
+    try:
+        cid = request.args.get('id', '').strip().upper()
+        if not cid:
+            return jsonify({"success": False, "error": "ระบุ ID ไม่ครบถ้วน"}), 400
+            
+        clients = load_clients()
+        if cid not in clients:
+            clients[cid] = {
+                "approved": False,
+                "registered_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "last_seen_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+            save_clients(clients)
+            return jsonify({"success": True, "approved": False})
+            
+        clients[cid]["last_seen_at"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        save_clients(clients)
+        return jsonify({"success": True, "approved": clients[cid]["approved"]})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 

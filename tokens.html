@@ -86,6 +86,35 @@
             </div>
         </div>
 
+        <!-- Client Devices Management Card -->
+        <div class="card glass" style="padding: 24px; align-items: stretch; margin-top: 25px; margin-bottom: 25px;">
+            <div class="card-title" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; font-size: 1.15rem;">
+                <span>🖥️ การจัดการอนุมัติเครื่องผู้ใช้งาน (Client Device Approval Center)</span>
+                <button class="btn btn-secondary" id="btn-refresh-clients" style="font-size: 0.8rem; padding: 6px 12px;">🔄 รีเฟรชรายชื่อเครื่อง (Refresh)</button>
+            </div>
+            
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                            <th style="padding: 12px 10px;">รหัสเครื่องผู้ใช้ (Client ID)</th>
+                            <th style="padding: 12px 10px; text-align: center;">สถานะสิทธิ์</th>
+                            <th style="padding: 12px 10px;">ลงทะเบียนเมื่อ</th>
+                            <th style="padding: 12px 10px;">ออนไลน์ล่าสุด</th>
+                            <th style="padding: 12px 10px; text-align: center;">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="client-list-tbody">
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 25px; color: var(--text-secondary); font-style: italic;">
+                                กำลังโหลดข้อมูลรายชื่อเครื่องผู้ใช้งาน...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Footer -->
         <footer style="margin-top: 40px; text-align: center; font-size: 0.8rem; color: var(--text-secondary); border-top: 1px solid var(--border-color); padding-top: 20px;">
             &copy; 2026 RaceGO Management Co.,ltd. All rights reserved.
@@ -184,12 +213,88 @@
             }
         }
 
+        async function fetchClients() {
+            const tbody = document.getElementById('client-list-tbody');
+            if (!tbody) return;
+            try {
+                const res = await fetch('/api/clients');
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                
+                tbody.innerHTML = '';
+                const clientIds = Object.keys(data.clients).sort((a, b) => {
+                    return new Date(data.clients[b].last_seen_at) - new Date(data.clients[a].last_seen_at);
+                });
+                
+                if (clientIds.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 25px; color: var(--text-secondary); font-style: italic;">
+                                ยังไม่มีเครื่องผู้ใช้งานเข้ามาเชื่อมต่อ
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                clientIds.forEach(cid => {
+                    const info = data.clients[cid];
+                    const tr = document.createElement('tr');
+                    tr.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
+                    
+                    const statusBadge = info.approved 
+                        ? `<span style="background: rgba(46, 204, 113, 0.15); color: #2ecc71; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">อนุมัติแล้ว (Approved)</span>`
+                        : `<span style="background: rgba(231, 76, 60, 0.15); color: #e74c3c; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">รออนุมัติ (Pending)</span>`;
+                        
+                    const btnAction = info.approved
+                        ? `<button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem; background-color: rgba(231, 76, 60, 0.2); border-color: rgba(231, 76, 60, 0.3); color: #ff4a4a; cursor: pointer;" onclick="toggleClientApproval('${cid}', 'revoke')">🚫 ยกเลิกสิทธิ์</button>`
+                        : `<button class="btn btn-primary" style="padding: 4px 10px; font-size: 0.75rem; background-color: rgba(46, 204, 113, 0.2); border-color: rgba(46, 204, 113, 0.3); color: #2ecc71; cursor: pointer;" onclick="toggleClientApproval('${cid}', 'approve')">✅ อนุมัติสิทธิ์</button>`;
+                        
+                    tr.innerHTML = `
+                        <td style="padding: 12px 10px; font-family: monospace; font-weight: 700; color: #ffffff;">${cid}</td>
+                        <td style="padding: 12px 10px; text-align: center;">${statusBadge}</td>
+                        <td style="padding: 12px 10px; color: var(--text-secondary);">${info.registered_at}</td>
+                        <td style="padding: 12px 10px; color: var(--text-secondary);">${info.last_seen_at}</td>
+                        <td style="padding: 12px 10px; text-align: center;">${btnAction}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 25px; color: var(--color-error);">
+                            โหลดรายชื่อเครื่องล้มเหลว: ${err.message}
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        async function toggleClientApproval(clientId, action) {
+            try {
+                const res = await fetch('/api/clients/approve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: clientId, action })
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                fetchClients();
+            } catch (err) {
+                alert('การทำงานล้มเหลว: ' + err.message);
+            }
+        }
+
         // Wire up UI events
         document.getElementById('btn-refresh-tokens')?.addEventListener('click', fetchTokens);
         document.getElementById('btn-generate-backend-token')?.addEventListener('click', generateToken);
+        document.getElementById('btn-refresh-clients')?.addEventListener('click', fetchClients);
 
         // Load initially
-        window.onload = fetchTokens;
+        window.onload = function() {
+            fetchTokens();
+            fetchClients();
+        };
     </script>
 </body>
 </html>

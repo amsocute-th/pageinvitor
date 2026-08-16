@@ -13,19 +13,57 @@ document.addEventListener("DOMContentLoaded", async () => {
   const topupMsg = document.getElementById("topup-message");
 
   // Read saved state, limits, and wallet tokens from local storage
-  // Default tokens to 100 on first install
+  // Default tokens to 50 on first install
   const storageData = await chrome.storage.local.get([
-    "inviteCount", "isRunning", "inviteLimit", "statusMessage", "inviteHistory", "sessionHistory", "tokenBalance"
+    "inviteCount", "isRunning", "inviteLimit", "statusMessage", "inviteHistory", "sessionHistory", "tokenBalance", "clientId"
   ]);
   
   invitedCount.textContent = storageData.inviteCount || 0;
   
-  let currentTokens = storageData.tokenBalance !== undefined ? storageData.tokenBalance : 100;
+  let currentTokens = storageData.tokenBalance !== undefined ? storageData.tokenBalance : 50;
   // Initialize storage if first time
   if (storageData.tokenBalance === undefined) {
-    await chrome.storage.local.set({ tokenBalance: 100 });
+    await chrome.storage.local.set({ tokenBalance: 50 });
   }
   tokenBalanceText.textContent = `${currentTokens} Tokens`;
+
+  // Generate or read Client ID
+  let clientId = storageData.clientId;
+  if (!clientId) {
+    const randPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+    clientId = `RCG-ID-${randPart}`;
+    await chrome.storage.local.set({ clientId: clientId });
+  }
+  
+  const clientIdDisplay = document.getElementById("client-id-display");
+  if (clientIdDisplay) {
+    clientIdDisplay.textContent = clientId;
+  }
+
+  // Validate approval status from cloud backend
+  let isApproved = false;
+  try {
+    const res = await fetch(`https://racego-backend.onrender.com/api/clients/status?id=${clientId}`);
+    const data = await res.json();
+    if (data.success && data.approved) {
+      isApproved = true;
+    }
+  } catch (e) {
+    console.log("RaceGO Inviter: Backend offline, fallback to cached approval status.");
+    const offlineData = await chrome.storage.local.get("isApproved");
+    isApproved = !!offlineData.isApproved;
+  }
+
+  await chrome.storage.local.set({ isApproved: isApproved });
+
+  if (!isApproved) {
+    btnStart.disabled = true;
+    btnStart.style.opacity = "0.5";
+    btnStart.style.cursor = "not-allowed";
+    btnStart.textContent = "รอการอนุมัติสิทธิ์ (Pending Approval)";
+    statusText.textContent = "ล็อกอยู่ (Locked)";
+    statusText.style.color = "var(--color-error)";
+  }
 
   if (storageData.inviteLimit) limitInput.value = storageData.inviteLimit;
   

@@ -16,7 +16,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (cooldownTimer) clearInterval(cooldownTimer);
     
     // Read current count to resume correctly
-    chrome.storage.local.get("inviteCount", (data) => {
+    chrome.storage.local.get(["inviteCount", "isApproved"], (data) => {
+      if (!data.isApproved) {
+        console.error("RaceGO Inviter: Device is not approved to run!");
+        chrome.storage.local.set({ statusMessage: "❌ เครื่องรออนุมัติสิทธิ์ (Not Approved)" });
+        stopInviting();
+        return;
+      }
+      
       inviteCount = data.inviteCount || 0;
       inviteTimer = true; // Mark as running to allow start
       
