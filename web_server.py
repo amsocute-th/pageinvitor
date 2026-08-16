@@ -459,7 +459,10 @@ def load_tokens():
                     "created_at": doc["created_at"],
                     "used_at": doc.get("used_at"),
                     "remaining_tokens": doc.get("remaining_tokens", doc["value"]),
-                    "last_sync_at": doc.get("last_sync_at")
+                    "last_sync_at": doc.get("last_sync_at"),
+                    "plan_name": doc.get("plan_name", "Custom"),
+                    "expiration_days": doc.get("expiration_days", 30),
+                    "expires_at": doc.get("expires_at")
                 }
             return tokens
         except Exception as e:
@@ -489,7 +492,10 @@ def save_tokens(tokens):
                         "created_at": info["created_at"],
                         "used_at": info.get("used_at"),
                         "remaining_tokens": info.get("remaining_tokens", info["value"]),
-                        "last_sync_at": info.get("last_sync_at")
+                        "last_sync_at": info.get("last_sync_at"),
+                        "plan_name": info.get("plan_name", "Custom"),
+                        "expiration_days": info.get("expiration_days", 30),
+                        "expires_at": info.get("expires_at")
                     }},
                     upsert=True
                 )
@@ -521,7 +527,9 @@ def get_tokens_api():
 def generate_token_api():
     try:
         data = request.get_json() or {}
-        value = int(data.get('value', 100))
+        value = int(data.get('value', 300))
+        expiration_days = int(data.get('expiration_days', 7))
+        plan_name = data.get('plan_name', 'Try 300Token')
         
         tokens = load_tokens()
         code = generate_random_code(value)
@@ -534,10 +542,13 @@ def generate_token_api():
             "created_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "used_at": None,
             "remaining_tokens": value,
-            "last_sync_at": None
+            "last_sync_at": None,
+            "plan_name": plan_name,
+            "expiration_days": expiration_days,
+            "expires_at": None
         }
         save_tokens(tokens)
-        return jsonify({"success": True, "code": code, "value": value})
+        return jsonify({"success": True, "code": code, "value": value, "plan_name": plan_name, "expiration_days": expiration_days})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -562,6 +573,12 @@ def validate_token_api():
         # Update token status
         token_info["status"] = "used"
         token_info["used_at"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Calculate expiration timestamp
+        days = int(token_info.get("expiration_days", 30))
+        expire_date = datetime.datetime.now() + datetime.timedelta(days=days)
+        token_info["expires_at"] = expire_date.strftime("%Y-%m-%d %H:%M:%S")
+        
         token_info["remaining_tokens"] = token_info["value"]
         token_info["last_sync_at"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         tokens[code] = token_info
@@ -609,7 +626,24 @@ def sync_token_balance():
             return jsonify({"success": False, "error": "ไม่พบรหัสเติมเงินนี้ (Code not found)"}), 404
             
         token_info = tokens[code]
-        token_info["remaining_tokens"] = balance
+        
+        # Check expiration date
+        is_expired = False
+        if token_info.get("expires_at"):
+            try:
+                exp_dt = datetime.datetime.strptime(token_info["expires_at"], "%Y-%m-%d %H:%M:%S")
+                if datetime.datetime.now() > exp_dt:
+                    is_expired = True
+            except Exception:
+                pass
+                
+        if is_expired:
+            token_info["status"] = "expired"
+            token_info["remaining_tokens"] = 0
+            balance = 0
+        else:
+            token_info["remaining_tokens"] = balance
+            
         token_info["last_sync_at"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         tokens[code] = token_info
         save_tokens(tokens)
@@ -710,7 +744,24 @@ def get_client_status_api():
             tokens_db = load_tokens()
             if code in tokens_db:
                 token_info = tokens_db[code]
-                if token_info.get("status") == "used" and token_info.get("remaining_tokens", 0) > 0:
+                
+                # Check expiration date
+                is_expired = False
+                if token_info.get("expires_at"):
+                    try:
+                        exp_dt = datetime.datetime.strptime(token_info["expires_at"], "%Y-%m-%d %H:%M:%S")
+                        if datetime.datetime.now() > exp_dt:
+                            is_expired = True
+                    except Exception:
+                        pass
+                
+                if is_expired:
+                    token_info["status"] = "expired"
+                    token_info["remaining_tokens"] = 0
+                    tokens_db[code] = token_info
+                    save_tokens(tokens_db)
+                
+                if not is_expired and token_info.get("status") == "used" and token_info.get("remaining_tokens", 0) > 0:
                     auto_approve = True
             
         clients = load_clients()

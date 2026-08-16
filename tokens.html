@@ -43,12 +43,12 @@
             
             <div style="display: flex; gap: 15px; background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); align-items: flex-end; flex-wrap: wrap;">
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label for="token-gen-value" style="font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 6px;">มูลค่าเหรียญที่จะสร้าง (Token Value)</label>
-                    <select id="token-gen-value" class="form-input" style="min-width: 180px; height: 38px;">
-                        <option value="100">100 Tokens</option>
-                        <option value="300">300 Tokens</option>
-                        <option value="500" selected>500 Tokens</option>
-                        <option value="1000">1,000 Tokens</option>
+                    <label for="token-gen-value" style="font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 6px;">เลือกแพลนแพ็กเกจเติมเงิน (Select Package Plan)</label>
+                    <select id="token-gen-value" class="form-input" style="min-width: 320px; height: 38px; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid var(--border-color); border-radius: 6px; padding: 0 10px;">
+                        <option value="300" data-days="7" data-name="Try 300Token" selected>1. Try 300Token - 100 Baht (7 วัน)</option>
+                        <option value="3000" data-days="30" data-name="Test 3000Token">2. Test 3000Token - 500 Baht (30 วัน)</option>
+                        <option value="99999999" data-days="30" data-name="Unlimit 30Day">3. Unlimit 30Day - 1,000 Baht (30 วัน)</option>
+                        <option value="99999999" data-days="365" data-name="King 365Day">4. King 365Day - 5,000 Baht (365 วัน)</option>
                     </select>
                 </div>
                 <button class="btn btn-primary" id="btn-generate-backend-token" style="font-size: 0.9rem; padding: 10px 20px; height: 38px;">➕ สร้างรหัสเติมเหรียญ (Generate)</button>
@@ -68,16 +68,17 @@
                     <thead>
                         <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
                             <th style="padding: 12px 10px;">รหัสเติมเงิน (Activation Code)</th>
+                            <th style="padding: 12px 10px; text-align: center;">แพ็กเกจ / อายุใช้งาน</th>
                             <th style="padding: 12px 10px; text-align: center;">มูลค่าเริ่มต้น</th>
                             <th style="padding: 12px 10px; text-align: center;">เหรียญคงเหลือ</th>
                             <th style="padding: 12px 10px; text-align: center;">สถานะ (Status)</th>
-                            <th style="padding: 12px 10px;">วันที่ใช้ (Used At)</th>
+                            <th style="padding: 12px 10px;">หมดอายุเมื่อ (Expires At)</th>
                             <th style="padding: 12px 10px;">ซิงค์ล่าสุด (Last Sync)</th>
                         </tr>
                     </thead>
                     <tbody id="token-list-tbody">
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 25px; color: var(--text-secondary); font-style: italic;">
+                            <td colspan="7" style="text-align: center; padding: 25px; color: var(--text-secondary); font-style: italic;">
                                 กำลังโหลดข้อมูลรหัสเปิดใช้งาน...
                             </td>
                         </tr>
@@ -151,7 +152,7 @@
                 if (codes.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 25px; color: var(--text-secondary); font-style: italic;">
+                            <td colspan="7" style="text-align: center; padding: 25px; color: var(--text-secondary); font-style: italic;">
                                 ยังไม่มีข้อมูลรหัสเติมเงิน (No tokens generated yet)
                             </td>
                         </tr>
@@ -167,19 +168,26 @@
                     let statusBadge = '';
                     if (info.status === 'valid') {
                         statusBadge = `<span style="background: rgba(46, 204, 113, 0.15); color: #2ecc71; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">ใช้งานได้ (Valid)</span>`;
+                    } else if (info.status === 'expired') {
+                        statusBadge = `<span style="background: rgba(231, 76, 60, 0.15); color: #ff4a4a; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">หมดอายุ (Expired)</span>`;
                     } else {
                         statusBadge = `<span style="background: rgba(255,255,255,0.08); color: var(--text-secondary); padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">ใช้แล้ว (Used)</span>`;
                     }
+                    
+                    let valDisplay = info.value >= 99999999 ? "ไม่จำกัด (Unlimited)" : `${info.value.toLocaleString()} Tokens`;
+                    let remDisplay = info.remaining_tokens >= 99999999 ? "ไม่จำกัด (Unlimited)" : `${(info.remaining_tokens !== undefined ? info.remaining_tokens.toLocaleString() : '-')} Tokens`;
+                    let planDisplay = `${info.plan_name || 'Try 300Token'} (${info.expiration_days || '7'} วัน)`;
                     
                     tr.innerHTML = `
                         <td style="padding: 12px 10px; font-family: monospace; font-weight: 700; color: #ff2e2e; display: flex; align-items: center; gap: 10px;">
                             <span>${code}</span>
                             <span style="color: var(--text-secondary); cursor: pointer; text-decoration: underline; font-size: 0.75rem; font-family: inherit;" onclick="navigator.clipboard.writeText('${code}'); alert('คัดลอกรหัสเติมเงินสำเร็จ!');">คัดลอก</span>
                         </td>
-                        <td style="padding: 12px 10px; text-align: center; font-weight: 700; color: var(--text-secondary); font-size: 0.95rem;">${info.value.toLocaleString()}</td>
-                        <td style="padding: 12px 10px; text-align: center; font-weight: 900; color: var(--color-warning); font-size: 0.95rem;">${info.remaining_tokens !== undefined ? info.remaining_tokens.toLocaleString() : '-'}</td>
+                        <td style="padding: 12px 10px; text-align: center; color: var(--text-primary); font-weight: 500;">${planDisplay}</td>
+                        <td style="padding: 12px 10px; text-align: center; font-weight: 700; color: var(--text-secondary); font-size: 0.95rem;">${valDisplay}</td>
+                        <td style="padding: 12px 10px; text-align: center; font-weight: 900; color: var(--color-warning); font-size: 0.95rem;">${remDisplay}</td>
                         <td style="padding: 12px 10px; text-align: center;">${statusBadge}</td>
-                        <td style="padding: 12px 10px; color: var(--text-secondary);">${info.used_at || '-'}</td>
+                        <td style="padding: 12px 10px; color: var(--text-secondary);">${info.expires_at || (info.status === 'valid' ? 'เริ่มนับเมื่อเปิดใช้งาน' : '-')}</td>
                         <td style="padding: 12px 10px; color: var(--text-secondary);">${info.last_sync_at || '-'}</td>
                     `;
                     tbody.appendChild(tr);
@@ -187,7 +195,7 @@
             } catch (err) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" style="text-align: center; padding: 25px; color: var(--text-error);">
+                        <td colspan="7" style="text-align: center; padding: 25px; color: var(--text-error);">
                             ไม่สามารถโหลดข้อมูลรหัสเติมเงินได้: ${err.message}
                         </td>
                     </tr>
@@ -200,7 +208,11 @@
             const display = document.getElementById('new-token-display');
             if (!valSelect || !display) return;
             
-            const value = parseInt(valSelect.value, 10) || 500;
+            const selectedOpt = valSelect.options[valSelect.selectedIndex];
+            const value = parseInt(selectedOpt.value, 10);
+            const expiration_days = parseInt(selectedOpt.dataset.days, 10);
+            const plan_name = selectedOpt.dataset.name;
+            
             display.style.display = 'flex';
             display.style.color = 'var(--text-secondary)';
             display.textContent = 'กำลังสร้างรหัส...';
@@ -209,7 +221,7 @@
                 const res = await fetch('/api/tokens/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ value })
+                    body: JSON.stringify({ value, expiration_days, plan_name })
                 });
                 const data = await res.json();
                 
