@@ -397,7 +397,8 @@ def load_clients():
             return clients
         except Exception as e:
             print(f"Error loading clients from Mongo: {e}")
-            return {}
+            
+    # Local JSON fallback
     if os.path.exists(CLIENTS_FILE):
         try:
             import json
@@ -420,13 +421,16 @@ def save_clients(clients):
                     }},
                     upsert=True
                 )
-            return
         except Exception as e:
             print(f"Error saving clients to Mongo: {e}")
-            return
-    import json
-    with open(CLIENTS_FILE, "w", encoding="utf-8") as f:
-        json.dump(clients, f, indent=4, ensure_ascii=False)
+            
+    # Always write to local file as backup/fallback
+    try:
+        import json
+        with open(CLIENTS_FILE, "w", encoding="utf-8") as f:
+            json.dump(clients, f, indent=4, ensure_ascii=False)
+    except Exception as e:
+        print(f"Error writing clients JSON file: {e}")
 
 # Token Database Helpers
 TOKENS_FILE = "tokens.json"
@@ -448,7 +452,6 @@ def load_tokens():
             return tokens
         except Exception as e:
             print(f"RaceGO Backend: Error reading from MongoDB: {e}")
-            return {}
             
     # Local JSON fallback
     import json
@@ -476,15 +479,16 @@ def save_tokens(tokens):
                     }},
                     upsert=True
                 )
-            return
         except Exception as e:
             print(f"RaceGO Backend: Error saving to MongoDB: {e}")
-            return
             
-    # Local JSON fallback
-    import json
-    with open(TOKENS_FILE, "w", encoding="utf-8") as f:
-        json.dump(tokens, f, indent=4, ensure_ascii=False)
+    # Always write to local file as backup/fallback
+    try:
+        import json
+        with open(TOKENS_FILE, "w", encoding="utf-8") as f:
+            json.dump(tokens, f, indent=4, ensure_ascii=False)
+    except Exception as e:
+        print(f"Error writing tokens JSON file: {e}")
 
 def generate_random_code(value):
     import random
