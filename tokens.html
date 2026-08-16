@@ -269,6 +269,11 @@
                         ? `<span style="background: rgba(46, 204, 113, 0.15); color: #2ecc71; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">อนุมัติแล้ว (Approved)</span>`
                         : `<span style="background: rgba(231, 76, 60, 0.15); color: #e74c3c; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">รออนุมัติ (Pending)</span>`;
                         
+                    let statusHtml = statusBadge;
+                    if (info.warning) {
+                        statusHtml += `<br><span style="background: rgba(241, 196, 15, 0.15); color: #f1c40f; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; margin-top: 4px; display: inline-block;">⚠️ ผิดปกติ (Warning)</span>`;
+                    }
+                        
                     const btnAction = info.approved
                         ? `<button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem; background-color: rgba(231, 76, 60, 0.2); border-color: rgba(231, 76, 60, 0.3); color: #ff4a4a; cursor: pointer;" onclick="toggleClientApproval('${cid}', 'revoke')">🚫 ยกเลิกสิทธิ์</button>`
                         : `<button class="btn btn-primary" style="padding: 4px 10px; font-size: 0.75rem; background-color: rgba(46, 204, 113, 0.2); border-color: rgba(46, 204, 113, 0.3); color: #2ecc71; cursor: pointer;" onclick="toggleClientApproval('${cid}', 'approve')">✅ อนุมัติสิทธิ์</button>`;
@@ -284,7 +289,7 @@
                         
                     tr.innerHTML = `
                         <td style="padding: 12px 10px; font-family: monospace; font-weight: 700; color: #ffffff;">${cid}</td>
-                        <td style="padding: 12px 10px; text-align: center;">${statusBadge}</td>
+                        <td style="padding: 12px 10px; text-align: center;">${statusHtml}</td>
                         <td style="padding: 12px 10px; text-align: center; font-weight: bold; color: var(--color-warning);">${info.remaining_tokens !== undefined ? info.remaining_tokens.toLocaleString() : '0'} Tokens</td>
                         <td style="padding: 12px 10px; text-align: center; color: #2ecc71; font-weight: 600; font-size: 0.85rem;">${statsDisplay}</td>
                         <td style="padding: 12px 10px; color: var(--text-secondary);">${info.registered_at || '-'}</td>

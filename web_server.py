@@ -397,7 +397,8 @@ def load_clients():
                     "last_seen_at": doc.get("last_seen_at"),
                     "remaining_tokens": doc.get("remaining_tokens", 0),
                     "invite_history": doc.get("invite_history", []),
-                    "session_history": doc.get("session_history", [])
+                    "session_history": doc.get("session_history", []),
+                    "warning": doc.get("warning", False)
                 }
             return clients
         except Exception as e:
@@ -427,7 +428,8 @@ def save_clients(clients):
                         "last_seen_at": info.get("last_seen_at"),
                         "remaining_tokens": info.get("remaining_tokens", 0),
                         "invite_history": info.get("invite_history", []),
-                        "session_history": info.get("session_history", [])
+                        "session_history": info.get("session_history", []),
+                        "warning": info.get("warning", False)
                     }},
                     upsert=True
                 )
@@ -626,6 +628,14 @@ def sync_token_balance():
             return jsonify({"success": False, "error": "ไม่พบรหัสเติมเงินนี้ (Code not found)"}), 404
             
         token_info = tokens[code]
+        warning = False
+        
+        # Verify cheating (if reported balance is greater than recorded remaining tokens)
+        recorded_balance = token_info.get("remaining_tokens", 0)
+        # Skip warning checks for unlimited plans (which have value >= 99999999)
+        if token_info.get("value", 0) < 99999999:
+            if balance > recorded_balance:
+                warning = True
         
         # Check expiration date
         is_expired = False
@@ -642,7 +652,9 @@ def sync_token_balance():
             token_info["remaining_tokens"] = 0
             balance = 0
         else:
-            token_info["remaining_tokens"] = balance
+            # Update to client-reported balance if it is valid (less than or equal to recorded)
+            if not warning:
+                token_info["remaining_tokens"] = balance
             
         token_info["last_sync_at"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         tokens[code] = token_info
@@ -656,6 +668,8 @@ def sync_token_balance():
                 clients[client_id]["last_seen_at"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 clients[client_id]["invite_history"] = invite_history
                 clients[client_id]["session_history"] = session_history
+                if warning:
+                    clients[client_id]["warning"] = True
                 save_clients(clients)
                 
         return jsonify({"success": True})
@@ -740,6 +754,7 @@ def get_client_status_api():
             
         # Check if the code they present has positive remaining tokens to trigger auto-approval
         auto_approve = False
+        warning = False
         if code:
             tokens_db = load_tokens()
             if code in tokens_db:
@@ -761,6 +776,14 @@ def get_client_status_api():
                     tokens_db[code] = token_info
                     save_tokens(tokens_db)
                 
+                # Check for token balance cheating
+                if tokens_val.isdigit():
+                    reported = int(tokens_val)
+                    recorded = token_info.get("remaining_tokens", 0)
+                    # If they report more tokens than what's on server, they are cheating
+                    if reported > recorded:
+                        warning = True
+                
                 if not is_expired and token_info.get("status") == "used" and token_info.get("remaining_tokens", 0) > 0:
                     auto_approve = True
             
@@ -770,7 +793,8 @@ def get_client_status_api():
                 "approved": auto_approve,
                 "registered_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "last_seen_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "remaining_tokens": int(tokens_val) if tokens_val.isdigit() else 0
+                "remaining_tokens": int(tokens_val) if tokens_val.isdigit() else 0,
+                "warning": warning
             }
             save_clients(clients)
             return jsonify({"success": True, "approved": auto_approve})
@@ -780,6 +804,8 @@ def get_client_status_api():
             clients[cid]["remaining_tokens"] = int(tokens_val)
         if auto_approve:
             clients[cid]["approved"] = True
+        if warning:
+            clients[cid]["warning"] = True
         save_clients(clients)
         return jsonify({"success": True, "approved": clients[cid]["approved"]})
     except Exception as e:
