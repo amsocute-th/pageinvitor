@@ -105,6 +105,7 @@
                         <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
                             <th style="padding: 12px 10px;">รหัสเครื่องผู้ใช้ (Client ID)</th>
                             <th style="padding: 12px 10px; text-align: center;">สถานะสิทธิ์</th>
+                            <th style="padding: 12px 10px; text-align: center;">เหรียญเหลือล่าสุด</th>
                             <th style="padding: 12px 10px;">ลงทะเบียนเมื่อ</th>
                             <th style="padding: 12px 10px;">ออนไลน์ล่าสุด</th>
                             <th style="padding: 12px 10px; text-align: center;">จัดการ</th>
@@ -112,7 +113,7 @@
                     </thead>
                     <tbody id="client-list-tbody">
                         <tr>
-                            <td colspan="5" style="text-align: center; padding: 25px; color: var(--text-secondary); font-style: italic;">
+                            <td colspan="6" style="text-align: center; padding: 25px; color: var(--text-secondary); font-style: italic;">
                                 กำลังโหลดข้อมูลรายชื่อเครื่องผู้ใช้งาน...
                             </td>
                         </tr>
@@ -259,8 +260,9 @@
                     tr.innerHTML = `
                         <td style="padding: 12px 10px; font-family: monospace; font-weight: 700; color: #ffffff;">${cid}</td>
                         <td style="padding: 12px 10px; text-align: center;">${statusBadge}</td>
-                        <td style="padding: 12px 10px; color: var(--text-secondary);">${info.registered_at}</td>
-                        <td style="padding: 12px 10px; color: var(--text-secondary);">${info.last_seen_at}</td>
+                        <td style="padding: 12px 10px; text-align: center; font-weight: bold; color: var(--color-warning);">${info.remaining_tokens !== undefined ? info.remaining_tokens.toLocaleString() : '0'} Tokens</td>
+                        <td style="padding: 12px 10px; color: var(--text-secondary);">${info.registered_at || '-'}</td>
+                        <td style="padding: 12px 10px; color: var(--text-secondary);">${info.last_seen_at || '-'}</td>
                         <td style="padding: 12px 10px; text-align: center;">${btnAction}</td>
                     `;
                     tbody.appendChild(tr);
@@ -268,7 +270,7 @@
             } catch (err) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="5" style="text-align: center; padding: 25px; color: var(--color-error);">
+                        <td colspan="6" style="text-align: center; padding: 25px; color: var(--color-error);">
                             โหลดรายชื่อเครื่องล้มเหลว: ${err.message}
                         </td>
                     </tr>

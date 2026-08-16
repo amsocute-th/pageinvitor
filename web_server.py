@@ -392,7 +392,8 @@ def load_clients():
                 clients[cid] = {
                     "approved": doc["approved"],
                     "registered_at": doc.get("registered_at"),
-                    "last_seen_at": doc.get("last_seen_at")
+                    "last_seen_at": doc.get("last_seen_at"),
+                    "remaining_tokens": doc.get("remaining_tokens", 0)
                 }
             return clients
         except Exception as e:
@@ -417,7 +418,8 @@ def save_clients(clients):
                     {"$set": {
                         "approved": info["approved"],
                         "registered_at": info.get("registered_at"),
-                        "last_seen_at": info.get("last_seen_at")
+                        "last_seen_at": info.get("last_seen_at"),
+                        "remaining_tokens": info.get("remaining_tokens", 0)
                     }},
                     upsert=True
                 )
@@ -638,6 +640,7 @@ def approve_client_api():
 def get_client_status_api():
     try:
         cid = request.args.get('id', '').strip().upper()
+        tokens_val = request.args.get('tokens', '')
         if not cid:
             return jsonify({"success": False, "error": "ระบุ ID ไม่ครบถ้วน"}), 400
             
@@ -646,12 +649,15 @@ def get_client_status_api():
             clients[cid] = {
                 "approved": False,
                 "registered_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "last_seen_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                "last_seen_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "remaining_tokens": int(tokens_val) if tokens_val.isdigit() else 0
             }
             save_clients(clients)
             return jsonify({"success": True, "approved": False})
             
         clients[cid]["last_seen_at"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if tokens_val.isdigit():
+            clients[cid]["remaining_tokens"] = int(tokens_val)
         save_clients(clients)
         return jsonify({"success": True, "approved": clients[cid]["approved"]})
     except Exception as e:
