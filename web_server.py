@@ -372,7 +372,7 @@ clients_col = None
 if MONGODB_URI:
     try:
         from pymongo import MongoClient
-        db_client = MongoClient(MONGODB_URI)
+        db_client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=3000)
         mongo_db = db_client["racego_db"]
         tokens_col = mongo_db["tokens"]
         clients_col = mongo_db["clients"]
