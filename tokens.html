@@ -109,6 +109,7 @@
                             <th style="padding: 12px 10px;">รหัสเครื่องผู้ใช้ (Client ID)</th>
                             <th style="padding: 12px 10px; text-align: center;">สถานะสิทธิ์</th>
                             <th style="padding: 12px 10px; text-align: center;">เหรียญเหลือล่าสุด</th>
+                            <th style="padding: 12px 10px; text-align: center;">สถิติ 24 ชม. (รัน/เชิญ)</th>
                             <th style="padding: 12px 10px;">ลงทะเบียนเมื่อ</th>
                             <th style="padding: 12px 10px;">ออนไลน์ล่าสุด</th>
                             <th style="padding: 12px 10px; text-align: center;">จัดการ</th>
@@ -116,7 +117,7 @@
                     </thead>
                     <tbody id="client-list-tbody">
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 25px; color: var(--text-secondary); font-style: italic;">
+                            <td colspan="7" style="text-align: center; padding: 25px; color: var(--text-secondary); font-style: italic;">
                                 กำลังโหลดข้อมูลรายชื่อเครื่องผู้ใช้งาน...
                             </td>
                         </tr>
@@ -260,10 +261,20 @@
                         ? `<button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem; background-color: rgba(231, 76, 60, 0.2); border-color: rgba(231, 76, 60, 0.3); color: #ff4a4a; cursor: pointer;" onclick="toggleClientApproval('${cid}', 'revoke')">🚫 ยกเลิกสิทธิ์</button>`
                         : `<button class="btn btn-primary" style="padding: 4px 10px; font-size: 0.75rem; background-color: rgba(46, 204, 113, 0.2); border-color: rgba(46, 204, 113, 0.3); color: #2ecc71; cursor: pointer;" onclick="toggleClientApproval('${cid}', 'approve')">✅ อนุมัติสิทธิ์</button>`;
                         
+                    const now = Date.now();
+                    const minTime = now - (24 * 3600 * 1000);
+                    const inviteHistory = info.invite_history || [];
+                    const sessionHistory = info.session_history || [];
+                    
+                    const runs24h = sessionHistory.filter(ts => ts >= minTime).length;
+                    const invites24h = inviteHistory.filter(ts => ts >= minTime).length;
+                    const statsDisplay = `รัน ${runs24h} ครั้ง / เชิญ ${invites24h} คน`;
+                        
                     tr.innerHTML = `
                         <td style="padding: 12px 10px; font-family: monospace; font-weight: 700; color: #ffffff;">${cid}</td>
                         <td style="padding: 12px 10px; text-align: center;">${statusBadge}</td>
                         <td style="padding: 12px 10px; text-align: center; font-weight: bold; color: var(--color-warning);">${info.remaining_tokens !== undefined ? info.remaining_tokens.toLocaleString() : '0'} Tokens</td>
+                        <td style="padding: 12px 10px; text-align: center; color: #2ecc71; font-weight: 600; font-size: 0.85rem;">${statsDisplay}</td>
                         <td style="padding: 12px 10px; color: var(--text-secondary);">${info.registered_at || '-'}</td>
                         <td style="padding: 12px 10px; color: var(--text-secondary);">${info.last_seen_at || '-'}</td>
                         <td style="padding: 12px 10px; text-align: center;">${btnAction}</td>
@@ -273,7 +284,7 @@
             } catch (err) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" style="text-align: center; padding: 25px; color: var(--color-error);">
+                        <td colspan="7" style="text-align: center; padding: 25px; color: var(--color-error);">
                             โหลดรายชื่อเครื่องล้มเหลว: ${err.message}
                         </td>
                     </tr>

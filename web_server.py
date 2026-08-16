@@ -395,7 +395,9 @@ def load_clients():
                     "approved": doc["approved"],
                     "registered_at": doc.get("registered_at"),
                     "last_seen_at": doc.get("last_seen_at"),
-                    "remaining_tokens": doc.get("remaining_tokens", 0)
+                    "remaining_tokens": doc.get("remaining_tokens", 0),
+                    "invite_history": doc.get("invite_history", []),
+                    "session_history": doc.get("session_history", [])
                 }
             return clients
         except Exception as e:
@@ -423,7 +425,9 @@ def save_clients(clients):
                         "approved": info["approved"],
                         "registered_at": info.get("registered_at"),
                         "last_seen_at": info.get("last_seen_at"),
-                        "remaining_tokens": info.get("remaining_tokens", 0)
+                        "remaining_tokens": info.get("remaining_tokens", 0),
+                        "invite_history": info.get("invite_history", []),
+                        "session_history": info.get("session_history", [])
                     }},
                     upsert=True
                 )
@@ -593,6 +597,9 @@ def sync_token_balance():
         data = request.get_json() or {}
         code = data.get('code', '').strip().upper()
         balance = int(data.get('balance', 0))
+        client_id = data.get('client_id', '').strip().upper()
+        invite_history = data.get('invite_history', [])
+        session_history = data.get('session_history', [])
         
         if not code:
             return jsonify({"success": False, "error": "รหัสผ่านว่างเปล่า (Empty code)"}), 400
@@ -605,8 +612,18 @@ def sync_token_balance():
         token_info["remaining_tokens"] = balance
         token_info["last_sync_at"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         tokens[code] = token_info
-        
         save_tokens(tokens)
+        
+        # If client_id is present, sync their historical statistics
+        if client_id:
+            clients = load_clients()
+            if client_id in clients:
+                clients[client_id]["remaining_tokens"] = balance
+                clients[client_id]["last_seen_at"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                clients[client_id]["invite_history"] = invite_history
+                clients[client_id]["session_history"] = session_history
+                save_clients(clients)
+                
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
