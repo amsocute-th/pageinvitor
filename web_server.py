@@ -542,6 +542,7 @@ def validate_token_api():
     try:
         data = request.get_json() or {}
         code = data.get('code', '').strip().upper()
+        client_id = data.get('client_id', '').strip().upper()
         
         if not code:
             return jsonify({"success": False, "error": "กรุณาระบุรหัสเติมเงิน (Empty code)"}), 400
@@ -561,6 +562,22 @@ def validate_token_api():
         token_info["last_sync_at"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         tokens[code] = token_info
         save_tokens(tokens)
+        
+        # Auto-approve client device if provided
+        if client_id:
+            clients = load_clients()
+            if client_id not in clients:
+                clients[client_id] = {
+                    "approved": True,
+                    "registered_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "last_seen_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "remaining_tokens": token_info["value"]
+                }
+            else:
+                clients[client_id]["approved"] = True
+                clients[client_id]["last_seen_at"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                clients[client_id]["remaining_tokens"] = token_info["value"]
+            save_clients(clients)
         
         return jsonify({
             "success": True, 
@@ -665,23 +682,36 @@ def get_client_status_api():
     try:
         cid = request.args.get('id', '').strip().upper()
         tokens_val = request.args.get('tokens', '')
+        code = request.args.get('code', '').strip().upper()
+        
         if not cid:
             return jsonify({"success": False, "error": "ระบุ ID ไม่ครบถ้วน"}), 400
+            
+        # Check if the code they present has positive remaining tokens to trigger auto-approval
+        auto_approve = False
+        if code:
+            tokens_db = load_tokens()
+            if code in tokens_db:
+                token_info = tokens_db[code]
+                if token_info.get("status") == "used" and token_info.get("remaining_tokens", 0) > 0:
+                    auto_approve = True
             
         clients = load_clients()
         if cid not in clients:
             clients[cid] = {
-                "approved": False,
+                "approved": auto_approve,
                 "registered_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "last_seen_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "remaining_tokens": int(tokens_val) if tokens_val.isdigit() else 0
             }
             save_clients(clients)
-            return jsonify({"success": True, "approved": False})
+            return jsonify({"success": True, "approved": auto_approve})
             
         clients[cid]["last_seen_at"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         if tokens_val.isdigit():
             clients[cid]["remaining_tokens"] = int(tokens_val)
+        if auto_approve:
+            clients[cid]["approved"] = True
         save_clients(clients)
         return jsonify({"success": True, "approved": clients[cid]["approved"]})
     except Exception as e:
