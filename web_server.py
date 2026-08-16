@@ -72,10 +72,15 @@ def get_posts():
             "limit": 100,
             "access_token": PAGE_ACCESS_TOKEN
         }
-        res = requests.get(url, params=params).json()
+        res_raw = requests.get(url, params=params)
+        print(f"DEBUG: Facebook API Response Status: {res_raw.status_code}")
+        print(f"DEBUG: Facebook API Response Body: {res_raw.text[:1000]}")
+        res = res_raw.json()
         posts = res.get("data", [])
         return jsonify({"success": True, "posts": posts})
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/analyze-comments', methods=['POST'])
@@ -148,6 +153,25 @@ def analyze_comments():
             "comments": detailed_comments
         })
     except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/generate-comment-reply', methods=['POST'])
+def generate_comment_reply_api():
+    if IS_CLOUD:
+        return jsonify({"success": False, "error": "ระบบนี้ถูกกำหนดให้ทำงานบนเครื่อง Local เท่านั้น"}), 403
+    try:
+        data = request.get_json() or {}
+        message = data.get('message', '').strip()
+        if not message:
+            return jsonify({"success": False, "error": "ไม่มีข้อความคอมเมนต์"}), 400
+            
+        reply = generate_ai_reply(message)
+        return jsonify({"success": True, "reply": reply})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/start-bot', methods=['POST'])

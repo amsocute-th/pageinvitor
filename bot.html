@@ -1,851 +1,583 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nokia Facebook Assistant Control Center</title>
+    <title>RaceGO Live Comment Control Hub</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-</head>
-<body>
-    <div class="glass-container">
-        <!-- Header -->
-        <header>
-            <div class="header-logo">
-                <span class="pulse-indicator"></span>
-                <h1>Nokia Sutasinee</h1>
-            </div>
-            <div class="header-title">Live Comment Automation Control Center</div>
-        </header>
-
-        <!-- Step Navigation Bar -->
-        <div class="step-nav glass">
-            <div class="step-indicator active" id="step-1-indicator">
-                <span class="step-num">1</span> Select Posts
-            </div>
-            <div class="step-line"></div>
-            <div class="step-indicator" id="step-2-indicator">
-                <span class="step-num">2</span> Audit Comments
-            </div>
-            <div class="step-line"></div>
-            <div class="step-indicator" id="step-3-indicator">
-                <span class="step-num">3</span> Live Automation
-            </div>
-        </div>
-
-        <!-- ======================================= -->
-        <!-- STEP 1: Select Posts Panel -->
-        <!-- ======================================= -->
-        <div class="step-panel" id="panel-1">
-            <div class="panel-header">
-                <h2>Choose Target Posts</h2>
-                <p class="panel-desc">Select the timeframe to retrieve posts and check up to 25 items for comment processing.</p>
-            </div>
-            
-            <div class="filter-row glass" style="gap: 15px; flex-wrap: wrap;">
-                <div class="form-group">
-                    <label for="time-range">Timeframe</label>
-                    <select id="time-range" class="form-input" style="min-width: 160px;">
-                        <option value="24h">24 ชั่วโมง (24 Hours)</option>
-                        <option value="1">วันนี้ (Today)</option>
-                        <option value="7" selected>7 วันที่ผ่านมา (Last 7 Days)</option>
-                        <option value="15">15 วันที่ผ่านมา (Last 15 Days)</option>
-                        <option value="30">30 วันที่ผ่านมา (Last 30 Days)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="post-type-filter">ประเภทคอนเทนต์ (Content Type)</label>
-                    <select id="post-type-filter" class="form-input" style="min-width: 160px;">
-                        <option value="all" selected>ทั้งหมด (All)</option>
-                        <option value="reel">เฉพาะ reel (Only Reels)</option>
-                        <option value="image">Image (Only Images)</option>
-                        <option value="text">Text (Only Text)</option>
-                        <option value="share">Share (Only Shares)</option>
-                    </select>
-                </div>
-                <button class="btn btn-primary" id="btn-fetch-posts">Retrieve Page Feed</button>
-            </div>
-
-            <!-- Posts Grid -->
-            <div class="posts-grid" id="posts-grid-container">
-                <div class="grid-empty-state">
-                    <p>Select a timeframe above and retrieve your page feed to begin.</p>
-                </div>
-            </div>
-
-            <!-- Posts Pagination Controls -->
-            <div id="posts-pagination-container" style="display: none; justify-content: space-between; align-items: center; margin-top: 15px; padding: 12px 20px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid var(--border-color); flex-wrap: wrap; gap: 10px; width: 100%;">
-                <button class="btn btn-secondary" id="btn-select-all-posts" style="font-size: 0.85rem; padding: 8px 16px;">เลือกทั้งหมดในหน้านี้ (Select All on Page)</button>
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <button class="btn btn-secondary" id="btn-posts-prev" style="font-size: 0.85rem; padding: 8px 16px;">◀ ย้อนกลับ</button>
-                    <span id="posts-page-info" style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">หน้า 1 / 1</span>
-                    <button class="btn btn-secondary" id="btn-posts-next" style="font-size: 0.85rem; padding: 8px 16px;">ถัดไป ▶</button>
-                </div>
-            </div>
-
-            <div class="action-footer">
-                <span class="selection-counter" id="post-selection-counter">0 / 25 selected</span>
-                <button class="btn btn-primary btn-disabled" id="btn-goto-step2" disabled>Next: Audit Comments</button>
-            </div>
-
-            <!-- Daily History Record -->
-            <div class="card glass" style="margin-top: 35px; padding: 20px; align-items: stretch;">
-                <div class="card-title" style="margin-bottom: 15px; display: flex; align-items: center; gap: 8px; font-size: 1.05rem;">
-                    📅 ประวัติการทำงานสะสมรายวัน (Daily Execution Records)
-                </div>
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
-                        <thead>
-                            <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
-                                <th style="padding: 10px;">วันที่ (Date)</th>
-                                <th style="padding: 10px; text-align: center;">ใช้งาน AI (AI Requests)</th>
-                                <th style="padding: 10px; text-align: center;">จำนวนกดไลก์ (Likes)</th>
-                                <th style="padding: 10px; text-align: center;">จำนวนตอบคอมเมนต์ (Replies)</th>
-                                <th style="padding: 10px; text-align: center;">ลบคอมเมนต์สแปม (Spam Deleted)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="daily-history-tbody">
-                            <tr>
-                                <td colspan="5" style="text-align: center; padding: 15px; color: var(--text-secondary);">
-                                    กำลังโหลดประวัติย้อนหลัง...
-                                </td>
-                            </tr>
-                        </tbody>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- ======================================= -->
-        <!-- STEP 2: Audit Comments Panel -->
-        <!-- ======================================= -->
-        <div class="step-panel" id="panel-2" style="display: none;">
-            <div class="panel-header">
-                <h2>Audit & Configure</h2>
-                <p class="panel-desc">Review pending comment interactions and configure options before launching the bot.</p>
-            </div>
-
-            <!-- Audit Metrics -->
-            <div class="audit-summary-grid">
-                <div class="audit-card glass">
-                    <span class="audit-label">Target Posts</span>
-                    <span class="audit-val" id="audit-selected-posts-count">0</span>
-                </div>
-                <div class="audit-card glass">
-                    <span class="audit-label">Total Comments Found</span>
-                    <span class="audit-val" id="audit-total-comments">0</span>
-                </div>
-                <div class="audit-card glass card-highlight-like">
-                    <span class="audit-label">Pending Likes</span>
-                    <span class="audit-val color-like" id="audit-likes-needed">0</span>
-                </div>
-                <div class="audit-card glass card-highlight-reply">
-                    <span class="audit-label">Pending AI Replies</span>
-                    <span class="audit-val color-reply" id="audit-replies-needed">0</span>
-                </div>
-            </div>
-
-            <!-- Config Form -->
-            <div class="config-grid">
-                <div class="card glass">
-                    <div class="card-title">Automation Settings</div>
-                    <div class="form-row">
-                        <div class="form-group" style="flex-grow: 1;">
-                            <label for="config-target">Action Limit (Comments)</label>
-                            <input type="number" id="config-target" class="form-input" value="200" min="1" max="1000">
-                        </div>
-                        <div class="form-group" style="justify-content: center; align-items: flex-start; padding-top: 15px; display: flex; flex-direction: column; gap: 10px;">
-                            <label class="checkbox-container">
-                                <input type="checkbox" id="config-only-like">
-                                <span class="checkmark"></span>
-                                ไลก์อย่างเดียว (Only Like Comments)
-                            </label>
-                            <label class="checkbox-container">
-                                <input type="checkbox" id="config-delete-spam">
-                                <span class="checkmark"></span>
-                                ลบคอมเมนต์สแปมลิงก์ก่อกวน (Auto Delete Spam Links - VK/WA/Line)
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Expandable Comments Audit List -->
-            <div class="card glass comment-audit-container" style="align-items: stretch; padding: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                    <div class="card-title" style="margin-bottom: 0;">Pending Comments Grouped Audit List</div>
-                    <button class="btn btn-primary" id="btn-generate-replies" style="font-size: 0.9rem; padding: 8px 18px; display: none;">🧠 สร้างคำตอบ AI (Generate AI Replies)</button>
-                </div>
-                <div id="audit-groups-container" style="display: flex; flex-direction: column; gap: 20px; padding-right: 5px;">
-                    <!-- Grouped sections will be injected here -->
-                </div>
-            </div>
-
-            <div class="action-footer">
-                <button class="btn btn-secondary" id="btn-back-to-step1">Back to Selection</button>
-                <button class="btn btn-primary" id="btn-start-automation">Start Automation</button>
-            </div>
-        </div>
-
-        <!-- ======================================= -->
-        <!-- STEP 3: Live Automation Panel -->
-        <!-- ======================================= -->
-        <div class="step-panel" id="panel-3" style="display: none;">
-            <!-- Current Post Section -->
-            <section class="current-post-card glass" id="active-post-container" style="display: none; margin-bottom: 25px;">
-                <div class="card-title">Currently Processing Post</div>
-                <div class="post-detail-content" style="display: flex; flex-direction: row; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
-                    <!-- Left side of post content: image -->
-                    <div class="post-image-container" id="post-img-container" style="display: none; flex-shrink: 0; width: 140px; height: 140px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);">
-                        <img id="post-picture" src="" alt="Post image" style="width: 100%; height: 100%; object-fit: cover;">
-                    </div>
-                    <!-- Right side: details -->
-                    <div class="post-info" style="display: flex; flex-direction: column; gap: 12px; flex-grow: 1; min-width: 250px;">
-                        <div class="post-meta">
-                            <span class="post-badge" id="post-index">Post 1 / 20</span>
-                            <span class="post-date" id="post-date">2026-08-14</span>
-                        </div>
-                        <p class="post-message" id="post-msg">ก่อนแข่ง HyROX...</p>
-                        <a href="#" target="_blank" class="post-link-btn" id="post-link">View Post on Facebook ↗</a>
-                        
-                        <!-- Active Comment Box -->
-                        <div class="latest-comment-box" id="latest-comment-container" style="display: none; margin-top: 15px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px dashed var(--border-color); border-radius: 12px; width: 100%;">
-                            <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 6px; letter-spacing: 0.5px; font-weight: 700;">Active Comment</div>
-                            <div style="font-weight: 800; font-size: 1rem; color: #ff2e2e;" id="comment-user">User Name</div>
-                            <p style="font-size: 0.95rem; color: var(--text-primary); margin-top: 6px; line-height: 1.5; white-space: pre-wrap;" id="comment-text">Comment text...</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Stats Grid -->
-            <main class="dashboard-grid">
-                <div class="card glass">
-                    <div class="card-title">Processed Progress</div>
-                    <div class="progress-bar-container">
-                        <svg class="circular-progress" viewBox="0 0 100 100">
-                            <circle class="bg-circle" cx="50" cy="50" r="40"></circle>
-                            <circle class="fg-circle" id="progress-circle" cx="50" cy="50" r="40"></circle>
-                        </svg>
-                        <div class="progress-text" id="progress-percent">0%</div>
-                    </div>
-                    <div class="subtext" id="progress-fraction">0 / 200</div>
-                </div>
-
-                <div class="card glass">
-                    <div class="card-title">Automation Metrics</div>
-                    <div class="metrics-list">
-                        <div class="metric-item">
-                            <span class="label">Total Target</span>
-                            <span class="value" id="stat-target">200</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="label">Processed</span>
-                            <span class="value" id="stat-processed">0</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="label">Likes Sent</span>
-                            <span class="value color-like" id="stat-likes">0</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="label">Replies Sent</span>
-                            <span class="value color-reply" id="stat-replies">0</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="label">Spam Deleted</span>
-                            <span class="value" id="stat-spam-deleted" style="color: #e74c3c; text-shadow: 0 0 6px rgba(231, 76, 60, 0.3);">0</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="label">FB API Requests</span>
-                            <span class="value" id="stat-fb-requests" style="color: #e67e22; text-shadow: 0 0 6px rgba(230, 126, 34, 0.3);">0</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="label">Gemini AI Requests</span>
-                            <span class="value" id="stat-gemini-requests" style="color: #9b59b6; text-shadow: 0 0 6px rgba(155, 89, 182, 0.3);">0 / 1500</span>
-                        </div>
-                        <div class="metric-item">
-                            <span class="label">Gemini Tokens Used</span>
-                            <span class="value" id="stat-gemini-tokens" style="color: #f1c40f; text-shadow: 0 0 6px rgba(241, 196, 15, 0.3);">0</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card glass log-card">
-                    <div class="card-title">Live Execution Feed</div>
-                    <div class="log-stream" id="log-container">
-                        <div class="log-line system">Waiting for data...</div>
-                    </div>
-                </div>
-            </main>
-
-            <div class="action-footer" style="margin-top: 25px;">
-                <button class="btn btn-secondary" id="btn-return-config">Back to Configuration</button>
-                <button class="btn btn-danger" id="btn-stop-bot">Abort System Execution</button>
-            </div>
-        </div>
-
-        <!-- Summary Modal -->
-        <div id="summary-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(8px);">
-            <div class="card glass" style="max-width: 650px; width: 90%; max-height: 85vh; overflow-y: auto; padding: 25px; border-color: rgba(52, 152, 219, 0.3);">
-                <div class="card-title" style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 1.3rem; color: #2ecc71;">
-                    <span style="font-size: 1.6rem;">🎉</span> Automation Execution Summary
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; margin-bottom: 25px;">
-                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px 8px; text-align: center;">
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">Target</div>
-                        <div id="modal-stat-target" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">0</div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px 8px; text-align: center;">
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">Processed</div>
-                        <div id="modal-stat-processed" style="font-size: 1.25rem; font-weight: 700; color: #ff2e2e;">0</div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px 8px; text-align: center;">
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">Likes</div>
-                        <div id="modal-stat-likes" style="font-size: 1.25rem; font-weight: 700; color: #2ecc71;">0</div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px 8px; text-align: center;">
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">AI Replies</div>
-                        <div id="modal-stat-replies" style="font-size: 1.25rem; font-weight: 700; color: #e67e22;">0</div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px 8px; text-align: center;">
-                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">Spam Deleted</div>
-                        <div id="modal-stat-spam" style="font-size: 1.25rem; font-weight: 700; color: #e74c3c;">0</div>
-                    </div>
-                </div>
-
-                <div class="card-title" style="font-size: 1rem; margin-bottom: 12px;">Verified Replies Visibility Status</div>
-                <div id="modal-replies-list" style="display: flex; flex-direction: column; gap: 12px; max-height: 250px; overflow-y: auto; margin-bottom: 25px; padding-right: 5px;">
-                    <div style="color: var(--text-secondary); text-align: center; padding: 15px; font-style: italic; font-size: 0.9rem;">
-                        No replies sent to verify.
-                    </div>
-                </div>
-
-                <div style="display: flex; justify-content: flex-end;">
-                    <button class="btn btn-primary" id="btn-close-modal" style="padding: 10px 24px;">Close Summary</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <footer>
-            <p>System Status: <span id="status-badge" class="badge">Offline</span> <span id="status-time" style="margin-left: 10px; color: var(--text-secondary); font-size: 0.85rem;"></span></p>
-        </footer>
-    </div>
-
-    <!-- ======================================= -->
-    <!-- Script Logic -->
-    <!-- ======================================= -->
-    <script>
-        let selectedPosts = [];
-        let allFetchedPosts = [];
-        let postsCurrentPage = 1;
-        const postsPerPage = 25;
-        let pollingInterval = null;
-        let previousStatus = null;
-
-        // Panel Navigation Helpers
-        function showPanel(stepNum) {
-            document.querySelectorAll('.step-panel').forEach(p => p.style.display = 'none');
-            document.querySelectorAll('.step-indicator').forEach(i => i.classList.remove('active'));
-            
-            document.getElementById(`panel-${stepNum}`).style.display = 'block';
-            document.getElementById(`step-${stepNum}-indicator`).classList.add('active');
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #06080d;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
         }
 
-        // ==========================================
-        // STEP 1: Fetching and Selection logic
-        // ==========================================
-        async function fetchPosts() {
-            const range = document.getElementById('time-range').value;
-            const container = document.getElementById('posts-grid-container');
-            container.innerHTML = '<div class="grid-loading"><span class="spinner"></span><p>Retrieving page posts...</p></div>';
-            document.getElementById('posts-pagination-container').style.display = 'none';
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            transition: color 0.2s;
+        }
+        .back-link:hover {
+            color: #ff2e2e;
+        }
+
+        /* Post Selector Grid */
+        .posts-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 550px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .post-card-mini {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.25s;
+            position: relative;
+        }
+        .post-card-mini:hover {
+            border-color: rgba(255, 46, 46, 0.3);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .post-card-mini.selected {
+            border-color: #ff2e2e;
+            background: rgba(255, 46, 46, 0.03);
+        }
+
+        .post-img-mini {
+            width: 60px;
+            height: 60px;
+            border-radius: 6px;
+            object-fit: cover;
+            background: #111;
+        }
+
+        .post-content-mini {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .post-text-mini {
+            font-size: 0.8rem;
+            color: var(--text-primary);
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+
+        /* Table design */
+        .audit-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .audit-table th, .audit-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            vertical-align: middle;
+        }
+        .audit-table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .audit-reply-textarea {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            font-size: 0.8rem;
+            padding: 6px 8px;
+            border-radius: 6px;
+            resize: vertical;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        .audit-reply-textarea:focus {
+            border-color: #ff2e2e;
+            outline: none;
+        }
+
+        .badge-need {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        .badge-need.like {
+            background: rgba(52, 152, 219, 0.15);
+            color: #3498db;
+        }
+        .badge-need.reply {
+            background: rgba(155, 89, 182, 0.15);
+            color: #9b59b6;
+        }
+
+        /* Live status grid */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card-mini {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        .stat-card-mini .val {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #ff2e2e;
+        }
+        .stat-card-mini .label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-container" style="max-width: 100%; width: 100%; box-sizing: border-box;">
+        <!-- Header -->
+        <header style="margin-bottom: 20px;">
+            <a href="/" class="back-link">
+                <span>◀ กลับหน้าแรก (Back to Home)</span>
+            </a>
+            <div class="header-logo" style="margin-top: 5px;">
+                <span class="pulse-indicator"></span>
+                <h1 style="font-size: 1.8rem;">RaceGO Live Comment Automation</h1>
+            </div>
+            <div class="header-title">ศูนย์ควบคุมวิเคราะห์และสั่งการตอบคอมเมนต์เพจอัตโนมัติด้วย AI</div>
+        </header>
+
+        <!-- Main Dashboard Layout -->
+        <div class="dashboard-layout">
             
+            <!-- Left Side: Post Selector -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="card glass" style="padding: 20px; align-items: stretch;">
+                    <div class="card-title" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>Choose Target Posts</span>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <select id="post-days-select" class="form-input" style="flex: 1; height: 36px; padding: 0 10px;">
+                            <option value="24h">Last 24 Hours</option>
+                            <option value="3" selected>Last 3 Days</option>
+                            <option value="7">Last 7 Days</option>
+                            <option value="30">Last 30 Days</option>
+                        </select>
+                        <button class="btn btn-secondary" id="btn-fetch-posts" style="padding: 0 15px; height: 36px;">🔄 ดึงโพสต์</button>
+                    </div>
+
+                    <div class="posts-grid" id="posts-container">
+                        <div style="text-align: center; padding: 30px 10px; color: var(--text-secondary); font-style: italic;">
+                            กดปุ่ม "ดึงโพสต์" เพื่อโหลดข้อมูลโพสต์ล่าสุด
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" id="btn-audit-comments" style="margin-top: 15px; width: 100%;" disabled>🔍 สแกนและวิเคราะห์ความคิดเห็น</button>
+                </div>
+
+                <!-- Automation Settings Box -->
+                <div class="card glass" style="padding: 20px; align-items: stretch;">
+                    <div class="card-title" style="margin-bottom: 12px;">⚙️ Automation Config</div>
+                    
+                    <div class="form-group">
+                        <label for="config-target">จำกัดตอบคอมเมนต์สูงสุด (Max Target)</label>
+                        <input type="number" id="config-target" class="form-input" value="100" min="1">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                        <label class="custom-chk">
+                            <input type="checkbox" id="config-only-like">
+                            <span class="chk-mark"></span>
+                            <span style="font-size: 0.85rem;">กดไลก์อย่างเดียว ไม่ต้องตอบกลับ</span>
+                        </label>
+                        <label class="custom-chk">
+                            <input type="checkbox" id="config-delete-spam" checked>
+                            <span class="chk-mark"></span>
+                            <span style="font-size: 0.85rem;">ลบคอมเมนต์สแปม/ลิงก์การพนันอัตโนมัติ</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Comment Audit & Status Panel -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                
+                <!-- Comment Audit List Card -->
+                <div class="card glass" style="padding: 20px; align-items: stretch; min-height: 400px;">
+                    <div class="card-title" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <span>📋 คอมเมนต์ที่รออนุมัติสิทธิ์ (Select Comments & Generate replies)</span>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-secondary" id="btn-generate-selected" style="font-size: 0.8rem; padding: 6px 12px; display: none;">🧠 ให้ Gemini คิดคำตอบรายการที่เลือก</button>
+                        </div>
+                    </div>
+
+                    <div style="overflow-x: auto; flex-grow: 1;">
+                        <table class="audit-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px; text-align: center;">
+                                        <input type="checkbox" id="select-all-comments-chk">
+                                    </th>
+                                    <th>ข้อมูลผู้ใช้ & ข้อความ (User & Message)</th>
+                                    <th style="width: 120px; text-align: center;">สิ่งที่ต้องทำ (Task)</th>
+                                    <th>ร่างข้อความตอบกลับ AI (AI Proposed Reply)</th>
+                                    <th style="width: 110px; text-align: center;">คิดคำตอบ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="audit-table-tbody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-secondary); font-style: italic;">
+                                        กรุณาเลือกโพสต์ทางด้านซ้าย และกด "สแกนและวิเคราะห์ความคิดเห็น" เพื่อเริ่มการตรวจสอบ
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Execution Stats & Live Logs Panel -->
+                <div class="card glass" style="padding: 20px; align-items: stretch;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <div class="card-title" style="margin-bottom: 0;">⚡ แผงสั่งการระบบบอทตอบคอมเมนต์ (Automation Console)</div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-primary" id="btn-start-bot" style="background-color: #ff2e2e; padding: 8px 24px; font-weight: bold;" disabled>🚀 สั่งบอทลุยเลย (Start Bot)</button>
+                            <button class="btn btn-secondary" id="btn-stop-bot" style="display: none; padding: 8px 24px; font-weight: bold; background-color: rgba(231, 76, 60, 0.2); border-color: rgba(231, 76, 60, 0.3); color: #ff4a4a;">🛑 สั่งหยุดชั่วคราว (Stop Bot)</button>
+                        </div>
+                    </div>
+
+                    <div class="status-grid">
+                        <div class="stat-card-mini">
+                            <div class="val" id="stat-status">OFFLINE</div>
+                            <div class="label">สถานะบอท (Status)</div>
+                        </div>
+                        <div class="stat-card-mini">
+                            <div class="val" id="stat-processed">0 / 0</div>
+                            <div class="label">ประมวลผลไปแล้ว</div>
+                        </div>
+                        <div class="stat-card-mini">
+                            <div class="val" id="stat-likes">0</div>
+                            <div class="label">กดไลก์สำเร็จ</div>
+                        </div>
+                        <div class="stat-card-mini">
+                            <div class="val" id="stat-replies">0</div>
+                            <div class="label">ตอบกลับสำเร็จ</div>
+                        </div>
+                        <div class="stat-card-mini">
+                            <div class="val" id="stat-gemini">0</div>
+                            <div class="label">เรียก Gemini (ครั้ง)</div>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">📋 บันทึกการทำงานเรียลไทม์ (Live Operation Logs) <span id="status-time" style="font-weight: 400; color: var(--text-secondary); margin-left: 8px;"></span></div>
+                    <div id="log-container" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; height: 160px; overflow-y: auto; font-family: monospace; font-size: 0.75rem; line-height: 1.5;">
+                        <div class="log-line system" style="color: var(--text-secondary);">รอเปิดการทำงาน... (Awaiting start instruction)</div>
+                    </div>
+                </div>
+
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        let selectedPosts = [];
+        let fetchedPosts = [];
+        let commentList = [];
+        let statusInterval = null;
+
+        // Fetch Facebook Posts
+        async function fetchPosts() {
+            const container = document.getElementById('posts-container');
+            const selectDays = document.getElementById('post-days-select').value;
+            container.innerHTML = '<div style="text-align: center; padding: 30px 10px; color: var(--text-secondary);">กำลังโหลดโพสต์ล่าสุดจาก Facebook...</div>';
+            document.getElementById('btn-audit-comments').disabled = true;
+            selectedPosts = [];
+
             try {
-                const res = await fetch(`/api/posts?days=${range}`);
+                const res = await fetch(`/api/posts?days=${selectDays}`);
                 const data = await res.json();
                 
-                if (!data.success || !data.posts || data.posts.length === 0) {
-                    container.innerHTML = '<div class="grid-empty-state"><p>No posts found in this timeframe.</p></div>';
+                if (!data.success) throw new Error(data.error);
+                
+                fetchedPosts = data.posts;
+                container.innerHTML = '';
+                
+                if (fetchedPosts.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 30px 10px; color: var(--text-secondary); font-style: italic;">ไม่พบโพสต์ในช่วงเวลาดังกล่าว</div>';
                     return;
                 }
                 
-                allFetchedPosts = data.posts;
-                postsCurrentPage = 1;
-                selectedPosts = [];
-                updateSelectionCounter();
-                
-                renderPostsPage();
-            } catch (err) {
-                container.innerHTML = '<div class="grid-empty-state"><p class="color-error">Error retrieving posts. Please check connection.</p></div>';
-            }
-        }
-
-        function getFilteredPosts() {
-            const filterVal = document.getElementById('post-type-filter').value;
-            if (filterVal === 'all') return allFetchedPosts;
-            
-            return allFetchedPosts.filter(post => {
-                const isReel = post.permalink_url && (post.permalink_url.includes('/reel/') || post.permalink_url.includes('/reels/'));
-                if (filterVal === 'reel') {
-                    return isReel;
-                }
-                if (isReel) return false; // Reels are excluded from other filters
-                
-                if (filterVal === 'image') {
-                    return post.status_type === 'added_photos' || post.full_picture;
-                }
-                if (filterVal === 'text') {
-                    return !post.full_picture && post.status_type !== 'shared_story';
-                }
-                if (filterVal === 'share') {
-                    return post.status_type === 'shared_story';
-                }
-                return true;
-            });
-        }
-
-        function renderPostsPage() {
-            const container = document.getElementById('posts-grid-container');
-            container.innerHTML = '';
-            
-            const filtered = getFilteredPosts();
-            const totalPages = Math.ceil(filtered.length / postsPerPage) || 1;
-            if (postsCurrentPage > totalPages) postsCurrentPage = totalPages;
-            if (postsCurrentPage < 1) postsCurrentPage = 1;
-            
-            // Toggle pagination visibility
-            const pagContainer = document.getElementById('posts-pagination-container');
-            if (filtered.length > 0) {
-                pagContainer.style.display = 'flex';
-            } else {
-                pagContainer.style.display = 'none';
-            }
-            
-            // Update page info text
-            document.getElementById('posts-page-info').textContent = `หน้า ${postsCurrentPage} / ${totalPages}`;
-            
-            // Slice the posts to show 25 posts
-            const startIdx = (postsCurrentPage - 1) * postsPerPage;
-            const pagePosts = filtered.slice(startIdx, startIdx + postsPerPage);
-            
-            if (pagePosts.length === 0) {
-                container.innerHTML = '<div class="grid-empty-state"><p>No posts found matching filter criteria on this page.</p></div>';
-                return;
-            }
-            
-            pagePosts.forEach(post => {
-                try {
-                    const hasPic = post.full_picture;
-                    const msg = post.message || '(No content text)';
-                    const displayMsg = msg; // Display full message and let CSS handle the clamp
-                    
-                    let dateStr = "Unknown Date";
-                    if (post.created_time) {
-                        try {
-                            dateStr = new Date(post.created_time).toLocaleString('th-TH', {
-                                dateStyle: 'medium',
-                                timeStyle: 'short'
-                            });
-                        } catch (e) {
-                            console.error("Error formatting date:", e);
-                        }
-                    }
-                    
-                    // Determine Content Type
-                    let typeLabel = "📝 โพสต์ข้อความ";
-                    try {
-                        const attachments = post.attachments && post.attachments.data;
-                        if (attachments && attachments.length > 0 && attachments[0]) {
-                            const mediaType = attachments[0].media_type;
-                            if (mediaType === "photo" || mediaType === "album") {
-                                typeLabel = "🖼️ รูปภาพ";
-                            } else if (mediaType === "video") {
-                                typeLabel = "🎥 วิดีโอ / Reels";
-                            } else if (mediaType === "link") {
-                                typeLabel = "🔗 ลิงก์";
-                            }
-                        } else if (post.status_type) {
-                            const st = post.status_type.toLowerCase();
-                            if (st.includes("photo")) typeLabel = "🖼️ รูปภาพ";
-                            else if (st.includes("video")) typeLabel = "🎥 วิดีโอ / Reels";
-                            else if (st.includes("link") || st.includes("shared")) typeLabel = "🔗 ลิงก์";
-                        }
-                    } catch (e) {
-                        console.error("Error parsing media type:", e);
-                    }
-
-                    // Get counts safely
-                    const likesCount = post.likes && post.likes.summary ? post.likes.summary.total_count : 0;
-                    const commentsCount = post.comments && post.comments.summary ? post.comments.summary.total_count : 0;
-                    const sharesCount = post.shares ? post.shares.count : 0;
-
-                    const isChecked = selectedPosts.includes(post.id);
-
+                fetchedPosts.forEach(post => {
                     const card = document.createElement('div');
-                    card.className = `post-select-card glass${isChecked ? ' selected' : ''}`;
-                    card.dataset.id = post.id;
+                    card.className = 'post-card-mini';
+                    card.dataset.postId = post.id;
                     
+                    const pic = post.full_picture ? `<img src="${post.full_picture}" class="post-img-mini">` : `<div class="post-img-mini" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem;background:#1a1c23;">📄</div>`;
+                    const text = post.message || '(ไม่มีข้อความโพสต์ / No Message)';
+                    const time = new Date(post.created_time).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+                    
+                    const commentsCount = post.comments ? post.comments.summary.total_count : 0;
+                    const likesCount = post.likes ? post.likes.summary.total_count : 0;
+
                     card.innerHTML = `
-                        ${hasPic ? `
-                        <div class="post-select-img-container">
-                            <img src="${post.full_picture}" alt="Post attachment">
-                        </div>
-                        ` : `
-                        <div class="post-select-img-container" style="display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.02);">
-                            <span style="font-size:0.75rem; color:var(--text-secondary); text-align:center;">No Image</span>
-                        </div>
-                        `}
-                        <div class="post-select-content-right">
-                            <div class="post-select-meta-row">
-                                <span class="post-select-date">${dateStr}</span>
-                                <label class="custom-chk">
-                                    <input type="checkbox" class="post-checkbox" value="${post.id}" ${isChecked ? 'checked' : ''}>
-                                    <span class="chk-mark"></span>
-                                </label>
-                            </div>
-                            <p class="post-select-text">${displayMsg}</p>
-                            <div style="display: flex; gap: 12px; font-size: 0.8rem; flex-wrap: wrap; margin-top: auto; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.02);">
-                                <span class="badge" style="background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--border-color); font-size: 0.72rem; padding: 2px 6px;">${typeLabel}</span>
-                                <span style="color: #2ecc71; font-weight: 600; display: flex; align-items: center; gap: 3px;">👍 ${likesCount.toLocaleString()}</span>
-                                <span style="color: #ff2e2e; font-weight: 600; display: flex; align-items: center; gap: 3px;">💬 ${commentsCount.toLocaleString()}</span>
-                                <span style="color: #e67e22; font-weight: 600; display: flex; align-items: center; gap: 3px;">🔗 ${sharesCount.toLocaleString()}</span>
+                        ${pic}
+                        <div class="post-content-mini">
+                            <div class="post-text-mini">${text}</div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-secondary);">
+                                <span>📅 ${time}</span>
+                                <span>👍 ${likesCount.toLocaleString()}  💬 ${commentsCount.toLocaleString()}</span>
                             </div>
                         </div>
                     `;
                     
-                    // Card click listener
-                    card.addEventListener('click', (e) => {
-                        // Skip if clicked checkmark box container itself
-                        if (e.target.closest('.custom-chk')) return;
-                        
-                        const chk = card.querySelector('.post-checkbox');
-                        chk.checked = !chk.checked;
-                        handleCheckboxToggle(chk, card);
-                    });
-                    
-                    // Direct checkbox listener
-                    card.querySelector('.post-checkbox').addEventListener('change', (e) => {
-                        handleCheckboxToggle(e.target, card);
-                    });
-                    
+                    card.addEventListener('click', () => togglePostSelection(post.id, card));
                     container.appendChild(card);
-                } catch (innerErr) {
-                    console.error("Error rendering individual post:", innerErr, post);
-                }
-            });
-
-            // Enable/disable page buttons
-            document.getElementById('btn-posts-prev').disabled = (postsCurrentPage === 1);
-            document.getElementById('btn-posts-next').disabled = (postsCurrentPage === totalPages);
-        }
-
-        function selectAllPostsOnPage() {
-            const currentCards = document.querySelectorAll('.post-select-card');
-            if (currentCards.length === 0) return;
-            
-            // Let's determine if any card on current page is unchecked
-            let allChecked = true;
-            currentCards.forEach(card => {
-                const chk = card.querySelector('.post-checkbox');
-                if (!chk.checked) allChecked = false;
-            });
-            
-            if (allChecked) {
-                // Uncheck all on current page
-                currentCards.forEach(card => {
-                    const chk = card.querySelector('.post-checkbox');
-                    chk.checked = false;
-                    card.classList.remove('selected');
-                    const idx = selectedPosts.indexOf(chk.value);
-                    if (idx > -1) selectedPosts.splice(idx, 1);
                 });
-            } else {
-                // Check all up to 25 posts limit
-                for (let card of currentCards) {
-                    const chk = card.querySelector('.post-checkbox');
-                    if (!chk.checked) {
-                        if (selectedPosts.length >= 25) {
-                            alert('คุณสามารถเลือกประมวลผลโพสต์ได้สูงสุด 25 โพสต์พร้อมกันเท่านั้น (Maximum limit is 25 posts)');
-                            break;
-                        }
-                        chk.checked = true;
-                        card.classList.add('selected');
-                        if (!selectedPosts.includes(chk.value)) {
-                            selectedPosts.push(chk.value);
-                        }
-                    }
-                }
-            }
-            updateSelectionCounter();
-        }
-
-        function handleCheckboxToggle(chk, card) {
-            const val = chk.value;
-            if (chk.checked) {
-                if (selectedPosts.length >= 25) {
-                    chk.checked = false;
-                    alert('You can select a maximum of 25 posts.');
-                    return;
-                }
-                selectedPosts.push(val);
-                card.classList.add('selected');
-            } else {
-                selectedPosts = selectedPosts.filter(id => id !== val);
-                card.classList.remove('selected');
-            }
-            updateSelectionCounter();
-        }
-
-        function updateSelectionCounter() {
-            document.getElementById('post-selection-counter').textContent = `${selectedPosts.length} / 25 selected`;
-            const nextBtn = document.getElementById('btn-goto-step2');
-            if (selectedPosts.length > 0) {
-                nextBtn.classList.remove('btn-disabled');
-                nextBtn.disabled = false;
-            } else {
-                nextBtn.classList.add('btn-disabled');
-                nextBtn.disabled = true;
+            } catch (err) {
+                container.innerHTML = `<div style="text-align: center; padding: 30px 10px; color: var(--color-error);">เกิดข้อผิดพลาด: ${err.message}</div>`;
             }
         }
 
-        // ==========================================
-        // STEP 2: Audit and Preview logic
-        // ==========================================
-        async function auditComments(generate = false) {
-            const container = document.getElementById('audit-groups-container');
-            const genBtn = document.getElementById('btn-generate-replies');
-            genBtn.style.display = 'none'; // Hide during load
-
-            container.innerHTML = `
-                <div class="audit-loading-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; gap: 20px; text-align: center;">
-                    <div class="spinner"></div>
-                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">${generate ? 'Generating AI Replies (Gemini)' : 'Analyzing & Preparing Automation Run'}</div>
-                    <div style="font-size: 0.95rem; color: var(--text-secondary); max-width: 400px; line-height: 1.5;" id="audit-loading-status-text">
-                        ${generate ? 'Step 3: Creating tailored AI responses...' : 'Step 1: Connecting to Facebook Graph API...'}
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; color: var(--text-secondary); text-align: left; margin-top: 10px; width: 100%; max-width: 320px; background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color);">
-                        <div id="loading-step-1" style="${generate ? 'color: #2ecc71; opacity: 0.7;' : 'color: var(--color-primary); font-weight: 700;'}">${generate ? '✅ Facebook comments retrieved!' : '⚡ Retrieving Page comments...'}</div>
-                        <div id="loading-step-2" style="${generate ? 'color: #2ecc71; opacity: 0.7;' : 'opacity: 0.5;'}">${generate ? '✅ Text patterns classified!' : '🔍 Analyzing emojis vs text patterns...'}</div>
-                        <div id="loading-step-3" style="${generate ? 'color: var(--color-primary); font-weight: 700; opacity: 1;' : 'opacity: 0.5;'}">🧠 Drafting AI replies with Gemini Flash...</div>
-                    </div>
-                </div>
-            `;
-            showPanel(2);
-
-            let timer1, timer2;
-            if (!generate) {
-                // Progressive Loading Text Updates for first scan
-                timer1 = setTimeout(() => {
-                    const step1 = document.getElementById('loading-step-1');
-                    const step2 = document.getElementById('loading-step-2');
-                    const statusTxt = document.getElementById('audit-loading-status-text');
-                    if (step1 && step2) {
-                        step1.innerHTML = '✅ Facebook comments retrieved!';
-                        step1.style.color = '#2ecc71';
-                        step1.style.opacity = '0.7';
-                        step2.style.color = 'var(--color-primary)';
-                        step2.style.fontWeight = '700';
-                        step2.style.opacity = '1';
-                        statusTxt.textContent = 'Step 2: Classifying comments and sorting emojis...';
-                    }
-                }, 1200);
-
-                timer2 = setTimeout(() => {
-                    const step2 = document.getElementById('loading-step-2');
-                    const step3 = document.getElementById('loading-step-3');
-                    const statusTxt = document.getElementById('audit-loading-status-text');
-                    if (step2 && step3) {
-                        step2.innerHTML = '✅ Text patterns classified!';
-                        step2.style.color = '#2ecc71';
-                        step2.style.opacity = '0.7';
-                        step3.style.color = 'var(--color-primary)';
-                        step3.style.fontWeight = '700';
-                        step3.style.opacity = '1';
-                        statusTxt.textContent = 'Step 3: Preparing AI proposed replies preview...';
-                    }
-                }, 2600);
+        function togglePostSelection(postId, cardElement) {
+            const idx = selectedPosts.indexOf(postId);
+            if (idx > -1) {
+                selectedPosts.splice(idx, 1);
+                cardElement.classList.remove('selected');
+            } else {
+                selectedPosts.push(postId);
+                cardElement.classList.add('selected');
             }
             
+            document.getElementById('btn-audit-comments').disabled = selectedPosts.length === 0;
+        }
+
+        // Fetch comments and audit
+        async function auditComments() {
+            const tbody = document.getElementById('audit-table-tbody');
+            const genSelectedBtn = document.getElementById('btn-generate-selected');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        🔄 กำลังโหลดคอมเมนต์และดึงความเห็น Facebook...
+                    </td>
+                </tr>
+            `;
+            genSelectedBtn.style.display = 'none';
+            document.getElementById('btn-start-bot').disabled = true;
+            commentList = [];
+
             try {
                 const res = await fetch('/api/analyze-comments', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ post_ids: selectedPosts, generate: generate })
+                    body: JSON.stringify({ post_ids: selectedPosts, generate: false })
                 });
                 const data = await res.json();
                 
-                // Clear progressive timers since we are done
-                if (timer1) clearTimeout(timer1);
-                if (timer2) clearTimeout(timer2);
+                if (!data.success) throw new Error(data.error);
                 
-                if (!data.success) {
-                    container.innerHTML = `<div class="color-error" style="text-align:center; padding: 20px;">Error auditing: ${data.error}</div>`;
-                    return;
-                }
+                commentList = data.comments;
+                tbody.innerHTML = '';
                 
-                // Set summaries
-                document.getElementById('audit-selected-posts-count').textContent = selectedPosts.length;
-                document.getElementById('audit-total-comments').textContent = data.summary.total_comments;
-                document.getElementById('audit-likes-needed').textContent = data.summary.likes_needed;
-                document.getElementById('audit-replies-needed').textContent = data.summary.replies_needed;
-                
-                // Set default target to match audit total comments
-                document.getElementById('config-target').value = data.summary.total_comments || 200;
-
-                // Show/hide Generate AI Replies button
-                if (data.summary.replies_needed > 0 && !generate) {
-                    genBtn.style.display = 'inline-block';
-                } else {
-                    genBtn.style.display = 'none';
-                }
-                
-                if (data.comments.length === 0) {
-                    container.innerHTML = '<div class="table-empty">No comments found to process.</div>';
+                if (commentList.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-secondary); font-style: italic;">
+                                ไม่พบความคิดเห็นที่ต้องการตอบกลับในโพสต์ที่เลือก
+                            </td>
+                        </tr>
+                    `;
                     return;
                 }
 
-                // Group comments
-                const groupReplyAndLike = [];
-                const groupLikeOnly = [];
-                const groupProcessed = [];
+                genSelectedBtn.style.display = 'inline-block';
+                document.getElementById('btn-start-bot').disabled = false;
 
-                data.comments.forEach(c => {
-                    if (c.replies_needed > 0) {
-                        groupReplyAndLike.push(c);
-                    } else if (c.likes_needed > 0) {
-                        groupLikeOnly.push(c);
-                    } else {
-                        groupProcessed.push(c);
-                    }
+                commentList.forEach((c, index) => {
+                    const tr = document.createElement('tr');
+                    tr.dataset.commentId = c.id;
+                    
+                    let taskBadges = '';
+                    if (c.likes_needed > 0) taskBadges += '<span class="badge-need like" style="margin-right: 4px;">👍 ไดก์</span>';
+                    if (c.replies_needed > 0) taskBadges += '<span class="badge-need reply">💬 ตอบกลับ</span>';
+                    if (!taskBadges) taskBadges = '<span style="color: var(--text-secondary); font-size:0.75rem;">เรียบร้อยแล้ว</span>';
+
+                    // Generate AI reply button
+                    const aiActionCell = c.replies_needed > 0 
+                        ? `<button class="btn btn-secondary btn-gen-single" data-index="${index}" style="padding: 4px 8px; font-size: 0.75rem; margin: 0 auto; display: block;">🤖 คิดคำตอบ</button>`
+                        : `<span style="color: var(--text-secondary); font-size: 0.75rem; text-align: center; display: block;">ไม่ต้องตอบ</span>`;
+
+                    tr.innerHTML = `
+                        <td style="text-align: center; vertical-align: middle;">
+                            ${c.replies_needed > 0 ? `<input type="checkbox" class="comment-select-chk" value="${c.id}" checked>` : ''}
+                        </td>
+                        <td>
+                            <strong style="color: #ff2e2e; display: block; font-size: 0.8rem; margin-bottom: 2px;">${c.user_name}</strong>
+                            <div style="color: var(--text-primary); font-size: 0.85rem; line-height: 1.4;">${c.message || '(ส่งสติกเกอร์/รูปภาพ)'}</div>
+                        </td>
+                        <td style="text-align: center;">${taskBadges}</td>
+                        <td>
+                            ${c.replies_needed > 0 
+                                ? `<textarea class="audit-reply-textarea" data-comment-id="${c.id}" rows="2" placeholder="คลิกปุ่ม 'คิดคำตอบ' หรือพิมพ์ข้อความที่นี่..."></textarea>` 
+                                : '<span style="color: var(--text-secondary); font-size:0.75rem; font-style:italic;">ข้าม (ไม่ต้องพิมพ์ตอบ)</span>'}
+                        </td>
+                        <td>${aiActionCell}</td>
+                    `;
+                    tbody.appendChild(tr);
                 });
 
-                container.innerHTML = '';
-
-                // Helper to render a group section
-                function renderGroupSection(title, color, commentsList, renderReply = false, isSelectable = true) {
-                    if (commentsList.length === 0) return;
-                    
-                    const section = document.createElement('div');
-                    section.className = 'audit-group-section';
-                    section.style.cssText = 'margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden;';
-                    
-                    const header = document.createElement('div');
-                    header.style.cssText = `background: rgba(255, 255, 255, 0.02); padding: 12px 16px; font-weight: 700; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${color};`;
-                    
-                    let selectAllHtml = '';
-                    if (isSelectable) {
-                        selectAllHtml = `
-                            <label class="custom-chk" style="margin: 0; display: inline-block; transform: scale(0.95); margin-right: 8px;">
-                                <input type="checkbox" class="group-select-all" checked>
-                                <span class="chk-mark"></span>
-                            </label>
-                        `;
-                    }
-                    
-                    header.innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 4px;">
-                            ${selectAllHtml}
-                            <span>${title}</span>
-                        </div>
-                        <span class="badge" style="background:${color}20; color:${color};">${commentsList.length}</span>
-                    `;
-                    section.appendChild(header);
-
-                    const body = document.createElement('div');
-                    body.style.cssText = 'display: flex; flex-direction: column; background: rgba(0, 0, 0, 0.15);';
-                    
-                    commentsList.forEach((c, idx) => {
-                        const row = document.createElement('div');
-                        row.style.cssText = 'padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); display: flex; flex-direction: column; gap: 8px;';
-                        if (idx === commentsList.length - 1) row.style.borderBottom = 'none';
-
-                        let itemCheckHtml = '';
-                        if (isSelectable) {
-                            itemCheckHtml = `
-                                <label class="custom-chk" style="margin: 0; display: inline-block; transform: scale(0.9); margin-right: 10px;">
-                                    <input type="checkbox" class="audit-comment-checkbox" value="${c.id}" checked>
-                                    <span class="chk-mark"></span>
-                                </label>
-                            `;
-                        }
-
-                        row.innerHTML = `
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <div style="display: flex; align-items: center;">
-                                    ${itemCheckHtml}
-                                    <strong style="color: #ff2e2e; font-size: 1rem;">${c.user_name}</strong>
-                                </div>
-                                <span style="font-size:0.75rem; color:var(--text-secondary);">ID: ${c.id.substring(c.id.indexOf('_')+1)}</span>
-                            </div>
-                            <div style="font-size:0.95rem; color:var(--text-primary); margin-top:2px; line-height: 1.5; padding-left: ${isSelectable ? '30px' : '0'};">"${c.message || '(No text)'}"</div>
-                            ${renderReply ? `
-                                <div style="margin-top: 12px; margin-left: ${isSelectable ? '30px' : '0'}; padding: 12px 18px; background: rgba(255, 46, 46, 0.08); border-left: 3px solid #ff2e2e; border-radius: 8px; font-size: 0.9rem; line-height: 1.5;">
-                                    <span style="font-weight: 700; color: #ff2e2e; display: block; margin-bottom: 4px;">AI Proposed Reply (แก้ไขข้อความได้ / Editable):</span>
-                                    ${c.proposed_reply ? `
-                                        <textarea class="reply-edit-textarea" data-comment-id="${c.id}" style="width: 100%; min-height: 60px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; color: #f1f2f6; padding: 8px 12px; font-family: inherit; font-size: 0.9rem; resize: vertical; margin-top: 6px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#ff2e2e'" onblur="this.style.borderColor='var(--border-color)'">${c.proposed_reply}</textarea>
-                                    ` : `
-                                        <span style="color: var(--text-secondary); font-style: italic;">
-                                            ⚠️ กดปุ่ม "สร้างคำตอบ AI" ด้านบนขวาของรายการเพื่อร่างคำตอบด้วย AI (Click "Generate AI Replies" at the top-right of the list to draft replies)
-                                        </span>
-                                    `}
-                                </div>
-                            ` : ''}
-                        `;
-                        body.appendChild(row);
+                // Wire up single generator buttons
+                document.querySelectorAll('.btn-gen-single').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const idx = parseInt(btn.dataset.index, 10);
+                        const c = commentList[idx];
+                        await generateSingleReply(c.id, c.message, btn);
                     });
-                    
-                    // Setup select all listener
-                    if (isSelectable) {
-                        const selectAllChk = header.querySelector('.group-select-all');
-                        selectAllChk.addEventListener('change', (e) => {
-                            const isChecked = e.target.checked;
-                            body.querySelectorAll('.audit-comment-checkbox').forEach(chk => {
-                                  chk.checked = isChecked;
-                            });
-                        });
-                    }
-
-                    section.appendChild(body);
-                    container.appendChild(section);
-                }
-
-                // Render the groups
-                renderGroupSection('💬 ต้องการตอบกลับด้วย AI และกดไลก์ (Needs AI Reply & Like)', '#ff2e2e', groupReplyAndLike, true, true);
-                renderGroupSection('👍 กดไลก์อย่างเดียว - ไม่มีข้อความ (Like Only - Emoji/Symbols)', '#2ecc71', groupLikeOnly, false, true);
-                renderGroupSection('✅ เรียบร้อยแล้ว (Already Processed)', 'var(--text-secondary)', groupProcessed, false, false);
-
+                });
+                
             } catch (err) {
-                container.innerHTML = `<div class="color-error" style="text-align:center; padding: 20px;">Connection timed out auditing comments: ${err.message}</div>`;
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px; color: var(--color-error);">
+                            เกิดข้อผิดพลาดในการดึงคอมเมนต์: ${err.message}
+                        </td>
+                    </tr>
+                `;
             }
         }
 
-        // ==========================================
-        // STEP 3: Live Monitoring & Controls
-        // ==========================================
+        // Generate AI reply for a single comment
+        async function generateSingleReply(commentId, messageText, buttonElement) {
+            const textarea = document.querySelector(`.audit-reply-textarea[data-comment-id="${commentId}"]`);
+            if (!textarea) return;
+            
+            buttonElement.disabled = true;
+            buttonElement.textContent = '🧠 กำลังคิด...';
+            textarea.placeholder = 'Gemini กำลังประมวลผลคิดร่างคำตอบ...';
+
+            try {
+                const res = await fetch('/api/generate-comment-reply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: messageText })
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                
+                textarea.value = data.reply;
+                buttonElement.textContent = '🤖 คิดใหม่';
+            } catch (err) {
+                textarea.placeholder = 'เกิดข้อผิดพลาดในการสร้างข้อความ: ' + err.message;
+                buttonElement.textContent = '❌ ลองใหม่';
+            } finally {
+                buttonElement.disabled = false;
+            }
+        }
+
+        // Generate AI replies for all selected checked comments
+        async function generateSelectedReplies() {
+            const checkedBoxes = document.querySelectorAll('.comment-select-chk:checked');
+            if (checkedBoxes.length === 0) {
+                alert('กรุณาติ๊กเลือกคอมเมนต์ที่ต้องการสร้างคำตอบก่อนครับ');
+                return;
+            }
+            
+            const btn = document.getElementById('btn-generate-selected');
+            btn.disabled = true;
+            btn.textContent = '🧠 Gemini กำลังคิดร่างข้อความตอบกลับทั้งหมด...';
+
+            for (const cb of checkedBoxes) {
+                const commentId = cb.value;
+                const tr = cb.closest('tr');
+                const singleBtn = tr.querySelector('.btn-gen-single');
+                const textarea = tr.querySelector(`.audit-reply-textarea[data-comment-id="${commentId}"]`);
+                
+                // If textarea is already filled, we don't overwrite it unless empty
+                if (textarea && !textarea.value.trim()) {
+                    const commentData = commentList.find(x => x.id === commentId);
+                    if (commentData) {
+                        await generateSingleReply(commentId, commentData.message, singleBtn);
+                    }
+                }
+            }
+
+            btn.disabled = false;
+            btn.textContent = '🧠 ให้ Gemini คิดคำตอบรายการที่เลือก';
+        }
+
+        // Start Automation
         async function startAutomation() {
-            const target = parseInt(document.getElementById('config-target').value, 10) || 200;
+            const target = parseInt(document.getElementById('config-target').value, 10) || 100;
             const onlyLike = document.getElementById('config-only-like').checked;
             const deleteSpam = document.getElementById('config-delete-spam').checked;
             
-            // Gather all checked comment IDs in the audit preview list
-            const checkedBoxes = document.querySelectorAll('.audit-comment-checkbox:checked');
-            if (checkedBoxes.length === 0) {
-                alert('กรุณาเลือกความคิดเห็นอย่างน้อย 1 รายการเพื่อดำเนินการบอท (Please select at least 1 comment to proceed)');
-                return;
-            }
-
-            // Map each selected comment ID to its customized reply string (if any)
+            // Build whitelist of approved replies from the textareas
             const whitelistDict = {};
+            const checkedBoxes = document.querySelectorAll('.comment-select-chk:checked');
+            
+            // Include checked comments with their customized reply string
             checkedBoxes.forEach(cb => {
                 const commentId = cb.value;
-                const textarea = document.querySelector(`.reply-edit-textarea[data-comment-id="${commentId}"]`);
-                if (textarea) {
-                    whitelistDict[commentId] = textarea.value.trim();
-                } else {
-                    whitelistDict[commentId] = true;
+                const textarea = document.querySelector(`.audit-reply-textarea[data-comment-id="${commentId}"]`);
+                const replyText = textarea ? textarea.value.trim() : '';
+                whitelistDict[commentId] = replyText || true; // True means like only or use generic reply if empty
+            });
+
+            // Also check all other comments which are "Like only" (don't have checkbox since replies_needed = 0)
+            commentList.forEach(c => {
+                if (c.replies_needed === 0 && c.likes_needed > 0) {
+                    whitelistDict[c.id] = true;
                 }
             });
+
+            document.getElementById('btn-start-bot').disabled = true;
             
             try {
                 const res = await fetch('/api/start-bot', {
@@ -859,332 +591,125 @@
                         delete_spam: deleteSpam
                     })
                 });
-                
                 const data = await res.json();
                 if (!data.success) {
-                    alert('Error starting bot: ' + data.error);
+                    alert('ไม่สามารถเริ่มบอทได้: ' + data.error);
+                    document.getElementById('btn-start-bot').disabled = false;
                     return;
                 }
+
+                // Show Stop button, hide Start button
+                document.getElementById('btn-start-bot').style.display = 'none';
+                document.getElementById('btn-stop-bot').style.display = 'inline-block';
                 
-                // Switch panel and start status polling
-                showPanel(3);
+                // Start polling logs
                 startStatusPolling();
             } catch (err) {
-                alert('Could not connect to automation server.');
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์บอท');
+                document.getElementById('btn-start-bot').disabled = false;
             }
         }
 
+        // Stop Automation
         async function stopAutomation() {
-            if (!confirm('Are you sure you want to abort operations?')) return;
-            
+            if (!confirm('คุณแน่ใจว่าต้องการสั่งหยุดการตอบกลับระบบบอทอัตโนมัติ?')) return;
             try {
-                await fetch('/api/stop-bot', { method: 'POST' });
+                const res = await fetch('/api/stop-bot', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('btn-stop-bot').style.display = 'none';
+                    document.getElementById('btn-start-bot').style.display = 'inline-block';
+                    document.getElementById('btn-start-bot').disabled = false;
+                }
             } catch (err) {
-                console.error("Error stopping bot:", err);
+                alert('สั่งหยุดล้มเหลว: ' + err.message);
             }
         }
 
+        // Poll logs and statistics
         function startStatusPolling() {
-            if (pollingInterval) clearInterval(pollingInterval);
-            pollStatus();
-            pollingInterval = setInterval(pollStatus, 1500);
-        }
+            if (statusInterval) clearInterval(statusInterval);
+            statusInterval = setInterval(async () => {
+                try {
+                    const res = await fetch('/api/status');
+                    const data = await res.json();
+                    
+                    document.getElementById('stat-status').textContent = data.status.toUpperCase();
+                    document.getElementById('stat-processed').textContent = `${data.processed} / ${data.target}`;
+                    document.getElementById('stat-likes').textContent = data.likes_sent;
+                    document.getElementById('stat-replies').textContent = data.replies_sent;
+                    document.getElementById('stat-gemini').textContent = data.gemini_requests;
 
-        function stopStatusPolling() {
-            if (pollingInterval) {
-                clearInterval(pollingInterval);
-                pollingInterval = null;
-            }
-        }
+                    const now = new Date();
+                    const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    document.getElementById('status-time').textContent = `(อัปเดตล่าสุด: ${timeStr} น.)`;
 
-        async function pollStatus() {
-            try {
-                const res = await fetch('/api/status');
-                const data = await res.json();
-                updateDashboardUI(data);
-                
-                // Show summary popup when status changes from running to finished/stopped
-                if (previousStatus === 'running' && data.status !== 'running') {
-                    showSummaryPopup(data);
-                }
-                previousStatus = data.status;
-                
-                // If stopped or finished, stop polling
-                if (data.status !== 'running') {
-                    stopStatusPolling();
-                    fetchDailyRecords();
-                }
-            } catch (err) {
-                console.error("Error fetching bot status:", err);
-            }
-        }
-
-        function showSummaryPopup(data) {
-            document.getElementById('modal-stat-target').textContent = data.target || 0;
-            document.getElementById('modal-stat-processed').textContent = data.processed || 0;
-            document.getElementById('modal-stat-likes').textContent = data.likes_sent || 0;
-            document.getElementById('modal-stat-replies').textContent = data.replies_sent || 0;
-            document.getElementById('modal-stat-spam').textContent = data.spam_deleted || 0;
-
-            const listContainer = document.getElementById('modal-replies-list');
-            listContainer.innerHTML = '';
-
-            if (data.recent_replies && data.recent_replies.length > 0) {
-                data.recent_replies.forEach(rep => {
-                    const row = document.createElement('div');
-                    row.style.background = 'rgba(255, 255, 255, 0.02)';
-                    row.style.border = '1px solid var(--border-color)';
-                    row.style.borderRadius = '8px';
-                    row.style.padding = '12px 16px';
-                    row.style.display = 'flex';
-                    row.style.flexDirection = 'column';
-                    row.style.gap = '6px';
-
-                    // Verify status badge color
-                    let badgeColor = '#f39c12'; // orange for warning
-                    if (rep.verify_status === 'Verified (แสดงผลแล้ว)') {
-                        badgeColor = '#2ecc71'; // green for verified
-                    } else if (rep.verify_status.includes('Failed') || rep.verify_status.includes('Not Found')) {
-                        badgeColor = '#e74c3c'; // red for failed
+                    // Render Logs
+                    const logContainer = document.getElementById('log-container');
+                    logContainer.innerHTML = '';
+                    if (data.recent_logs && data.recent_logs.length > 0) {
+                        data.recent_logs.forEach(log => {
+                            const el = document.createElement('div');
+                            el.className = 'log-line';
+                            el.style.marginBottom = '4px';
+                            
+                            if (log.includes('Success!') || log.includes('successfully') || log.includes('Posted')) {
+                                el.style.color = '#2ecc71';
+                            } else if (log.includes('Failed') || log.includes('Error')) {
+                                el.style.color = '#e74c3c';
+                            } else if (log.includes('Scanning') || log.includes('Traversing')) {
+                                el.style.color = '#3498db';
+                            }
+                            
+                            el.textContent = log;
+                            logContainer.appendChild(el);
+                        });
+                        logContainer.scrollTop = logContainer.scrollHeight;
+                    } else {
+                        logContainer.innerHTML = '<div class="log-line system" style="color: var(--text-secondary);">รอเปิดการทำงาน... (Awaiting start instruction)</div>';
                     }
 
-                    row.innerHTML = `
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 6px;">
-                            <span style="font-weight: 700; color: #ff2e2e; font-size: 0.9rem;">ผู้คอมเมนต์: ${rep.user_name}</span>
-                            <span style="font-size: 0.8rem; font-weight: 700; color: ${badgeColor}; text-transform: uppercase;">[ ${rep.verify_status} ]</span>
-                        </div>
-                        <div style="font-size: 0.85rem; color: var(--text-secondary);">
-                            <strong>คำถามผู้ใช้:</strong> "${rep.user_message}"
-                        </div>
-                        <div style="font-size: 0.85rem; color: #f1f2f6; font-style: italic; background: rgba(255, 46, 46, 0.05); padding: 8px; border-radius: 6px; margin-top: 4px; border-left: 2px solid #ff2e2e;">
-                            <strong>บอทตอบกลับ:</strong> "${rep.reply_message}"
-                        </div>
-                    `;
-                    listContainer.appendChild(row);
-                });
-            } else {
-                listContainer.innerHTML = `
-                    <div style="color: var(--text-secondary); text-align: center; padding: 15px; font-style: italic; font-size: 0.9rem;">
-                        ไม่มีข้อความที่ตอบกลับเพื่อตรวจสอบ
-                    </div>
-                `;
-            }
-
-            document.getElementById('summary-modal').style.display = 'flex';
-        }
-
-        function updateDashboardUI(data) {
-            // Update Current Post Details
-            const postContainer = document.getElementById('active-post-container');
-            if (data.current_post) {
-                postContainer.style.display = 'block';
-                document.getElementById('post-index').textContent = `Post ${data.current_post.index} / ${data.current_post.total_posts}`;
-                
-                const rawDate = data.current_post.created_time;
-                const formattedDate = rawDate ? new Date(rawDate).toLocaleString() : '';
-                document.getElementById('post-date').textContent = formattedDate;
-                document.getElementById('post-msg').textContent = data.current_post.message;
-                document.getElementById('post-link').href = data.current_post.permalink_url;
-
-                // Load post image
-                const imgContainer = document.getElementById('post-img-container');
-                const imgEl = document.getElementById('post-picture');
-                if (data.current_post.full_picture) {
-                    imgContainer.style.display = 'block';
-                    imgEl.src = data.current_post.full_picture;
-                } else {
-                    imgContainer.style.display = 'none';
-                    imgEl.src = '';
-                }
-
-                // Load active comment details
-                const commentContainer = document.getElementById('latest-comment-container');
-                if (data.latest_comment) {
-                    commentContainer.style.display = 'block';
-                    document.getElementById('comment-user').textContent = data.latest_comment.user_name || 'User';
-                    document.getElementById('comment-text').textContent = data.latest_comment.message || '';
-                } else {
-                    commentContainer.style.display = 'none';
-                }
-            } else {
-                postContainer.style.display = 'none';
-            }
-
-            // Update Text Metrics
-            document.getElementById('stat-target').textContent = data.target;
-            document.getElementById('stat-processed').textContent = data.processed;
-            document.getElementById('stat-likes').textContent = data.likes_sent;
-            document.getElementById('stat-replies').textContent = data.replies_sent;
-            document.getElementById('stat-spam-deleted').textContent = data.spam_deleted || 0;
-            document.getElementById('progress-fraction').textContent = `${data.processed} / ${data.target}`;
-
-            // Update API & Token Usage Metrics
-            document.getElementById('stat-fb-requests').textContent = data.facebook_requests || 0;
-            document.getElementById('stat-gemini-requests').textContent = `${data.gemini_requests || 0} / ${data.gemini_request_limit || 1500}`;
-            document.getElementById('stat-gemini-tokens').textContent = (data.gemini_tokens || 0).toLocaleString();
-
-            // Calculate & Update Progress Circle
-            const percent = Math.min(Math.round((data.processed / data.target) * 100), 100);
-            document.getElementById('progress-percent').textContent = percent + '%';
-            
-            const circle = document.getElementById('progress-circle');
-            const circumference = 2 * Math.PI * 40; // 251.2
-            const offset = circumference - (percent / 100) * circumference;
-            circle.style.strokeDashoffset = offset;
-
-            // Status Badge
-            const badge = document.getElementById('status-badge');
-            if (data.status === 'running') {
-                badge.textContent = 'Active Running';
-                badge.className = 'badge running';
-            } else if (data.status === 'finished') {
-                badge.textContent = 'Completed';
-                badge.className = 'badge completed';
-            } else {
-                badge.textContent = 'Standby';
-                badge.className = 'badge standby';
-            }
-
-            // Update local system time next to status
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            document.getElementById('status-time').textContent = `(อัปเดตล่าสุด: ${timeStr} น.)`;
-
-            // Log Feed
-            const logContainer = document.getElementById('log-container');
-            logContainer.innerHTML = '';
-            if (data.recent_logs && data.recent_logs.length > 0) {
-                data.recent_logs.forEach(log => {
-                    const el = document.createElement('div');
-                    el.className = 'log-line';
-                    
-                    if (log.includes('Success!') || log.includes('successfully')) {
-                        el.classList.add('success');
-                    } else if (log.includes('Failed') || log.includes('Error')) {
-                        el.classList.add('error');
-                    } else if (log.includes('Scanning') || log.includes('Processing Post')) {
-                        el.classList.add('system');
+                    // If bot completes, stop polling and reset buttons
+                    if (data.status === 'finished' || data.status === 'stopped') {
+                        clearInterval(statusInterval);
+                        statusInterval = null;
+                        document.getElementById('btn-stop-bot').style.display = 'none';
+                        document.getElementById('btn-start-bot').style.display = 'inline-block';
+                        document.getElementById('btn-start-bot').disabled = false;
                     }
-                    
-                    el.textContent = log;
-                    logContainer.appendChild(el);
-                });
-            } else {
-                logContainer.innerHTML = '<div class="log-line system">No active operations logged.</div>';
-            }
+
+                } catch (e) {
+                    console.log('Error polling bot status:', e);
+                }
+            }, 2000);
         }
 
-        // ==========================================
-        // Event Listeners
-        // ==========================================
+        // Check All Comments Toggle
+        document.getElementById('select-all-comments-chk').addEventListener('change', (e) => {
+            document.querySelectorAll('.comment-select-chk').forEach(cb => {
+                cb.checked = e.target.checked;
+            });
+        });
+
+        // Wire events
         document.getElementById('btn-fetch-posts').addEventListener('click', fetchPosts);
-        document.getElementById('btn-goto-step2').addEventListener('click', () => auditComments(false));
-        document.getElementById('btn-back-to-step1').addEventListener('click', () => showPanel(1));
-        document.getElementById('btn-start-automation').addEventListener('click', startAutomation);
+        document.getElementById('btn-audit-comments').addEventListener('click', auditComments);
+        document.getElementById('btn-generate-selected').addEventListener('click', generateSelectedReplies);
+        document.getElementById('btn-start-bot').addEventListener('click', startAutomation);
         document.getElementById('btn-stop-bot').addEventListener('click', stopAutomation);
-        document.getElementById('btn-return-config').addEventListener('click', () => {
-            stopStatusPolling();
-            showPanel(2);
-        });
 
-        // Content Filter Listener
-        document.getElementById('post-type-filter').addEventListener('change', () => {
-            postsCurrentPage = 1;
-            renderPostsPage();
-        });
-
-        // Posts Pagination Click Listeners
-        document.getElementById('btn-posts-prev').addEventListener('click', () => {
-            if (postsCurrentPage > 1) {
-                postsCurrentPage--;
-                renderPostsPage();
-            }
-        });
-        document.getElementById('btn-posts-next').addEventListener('click', () => {
-            const filtered = getFilteredPosts();
-            const totalPages = Math.ceil(filtered.length / postsPerPage);
-            if (postsCurrentPage < totalPages) {
-                postsCurrentPage++;
-                renderPostsPage();
-            }
-        });
-        document.getElementById('btn-select-all-posts').addEventListener('click', selectAllPostsOnPage);
-        document.getElementById('btn-close-modal').addEventListener('click', () => {
-            document.getElementById('summary-modal').style.display = 'none';
-        });
-        document.getElementById('btn-generate-replies').addEventListener('click', () => {
-            auditComments(true);
-        });
-
-        // Check initial server state on page load
-        async function fetchDailyRecords() {
-            const tbody = document.getElementById('daily-history-tbody');
-            try {
-                const res = await fetch('/api/daily-records');
-                const data = await res.json();
-                
-                if (!data.success || !data.records || Object.keys(data.records).length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="5" style="text-align: center; padding: 15px; color: var(--text-secondary);">
-                                ไม่มีประวัติการบันทึกการทำงานรายวันในขณะนี้
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
-                
-                tbody.innerHTML = '';
-                const sortedDates = Object.keys(data.records).sort((a, b) => new Date(b) - new Date(a));
-                
-                sortedDates.forEach(date => {
-                    const rec = data.records[date];
-                    const tr = document.createElement('tr');
-                    tr.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
-                    tr.innerHTML = `
-                        <td style="padding: 12px 10px; font-weight: 700; color: #ff2e2e;">${date}</td>
-                        <td style="padding: 12px 10px; text-align: center; color: var(--text-primary); font-weight: 600;">${rec.ai_requests || 0} ครั้ง</td>
-                        <td style="padding: 12px 10px; text-align: center; color: #2ecc71; font-weight: 600;">${rec.likes_sent || 0} ไลก์</td>
-                        <td style="padding: 12px 10px; text-align: center; color: #ff2e2e; font-weight: 600;">${rec.replies_sent || 0} คอมเมนต์</td>
-                        <td style="padding: 12px 10px; text-align: center; color: #e74c3c; font-weight: 600;">${rec.spam_deleted || 0} รายการ</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (err) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" style="text-align: center; padding: 15px; color: var(--color-error);">
-                            ไม่สามารถดึงข้อมูลประวัติรายวันได้: ${err.message}
-                        </td>
-                    </tr>
-                `;
-            }
-        }
-
-        // Check initial server state on page load
-        async function checkServerOnLoad() {
-            showPanel(1);
-            fetchDailyRecords();
-            
-            // Set initial status time
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            document.getElementById('status-time').textContent = `(อัปเดตล่าสุด: ${timeStr} น.)`;
-
-            try {
-                const res = await fetch('/api/status');
-                const data = await res.json();
-                updateDashboardUI(data);
+        // Load initially
+        window.onload = () => {
+            fetchPosts();
+            // Start polling status immediately in case bot was already running
+            fetch('/api/status').then(r => r.json()).then(data => {
                 if (data.status === 'running') {
-                    // If already running, start polling so metrics update, but stay on panel 1
+                    document.getElementById('btn-start-bot').style.display = 'none';
+                    document.getElementById('btn-stop-bot').style.display = 'inline-block';
                     startStatusPolling();
                 }
-            } catch (err) {
-                console.error("Could not check initial status:", err);
-            }
-        }
-
-        window.onload = checkServerOnLoad;
+            });
+        };
     </script>
 </body>
 </html>
