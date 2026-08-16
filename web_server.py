@@ -204,10 +204,45 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
+# MongoDB configuration (if MONGODB_URI is provided in environment variables)
+MONGODB_URI = os.getenv("MONGODB_URI")
+db_client = None
+mongo_db = None
+tokens_col = None
+
+if MONGODB_URI:
+    try:
+        from pymongo import MongoClient
+        db_client = MongoClient(MONGODB_URI)
+        mongo_db = db_client["racego_db"]
+        tokens_col = mongo_db["tokens"]
+        print("RaceGO Backend: Successfully connected to MongoDB Atlas!")
+    except Exception as e:
+        print(f"RaceGO Backend: Failed to connect to MongoDB: {e}")
+
 # Token Database Helpers
 TOKENS_FILE = "tokens.json"
 
 def load_tokens():
+    if tokens_col is not None:
+        try:
+            tokens = {}
+            for doc in tokens_col.find():
+                code = doc["_id"]
+                tokens[code] = {
+                    "value": doc["value"],
+                    "status": doc["status"],
+                    "created_at": doc["created_at"],
+                    "used_at": doc.get("used_at"),
+                    "remaining_tokens": doc.get("remaining_tokens", doc["value"]),
+                    "last_sync_at": doc.get("last_sync_at")
+                }
+            return tokens
+        except Exception as e:
+            print(f"RaceGO Backend: Error reading from MongoDB: {e}")
+            return {}
+            
+    # Local JSON fallback
     import json
     if os.path.exists(TOKENS_FILE):
         try:
@@ -218,6 +253,27 @@ def load_tokens():
     return {}
 
 def save_tokens(tokens):
+    if tokens_col is not None:
+        try:
+            for code, info in tokens.items():
+                tokens_col.update_one(
+                    {"_id": code},
+                    {"$set": {
+                        "value": info["value"],
+                        "status": info["status"],
+                        "created_at": info["created_at"],
+                        "used_at": info.get("used_at"),
+                        "remaining_tokens": info.get("remaining_tokens", info["value"]),
+                        "last_sync_at": info.get("last_sync_at")
+                    }},
+                    upsert=True
+                )
+            return
+        except Exception as e:
+            print(f"RaceGO Backend: Error saving to MongoDB: {e}")
+            return
+            
+    # Local JSON fallback
     import json
     with open(TOKENS_FILE, "w", encoding="utf-8") as f:
         json.dump(tokens, f, indent=4, ensure_ascii=False)
