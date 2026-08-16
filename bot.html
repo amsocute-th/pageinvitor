@@ -233,25 +233,27 @@
                     <button class="btn btn-primary" id="btn-audit-comments" style="margin-top: 15px; width: 100%;" disabled>🔍 สแกนและวิเคราะห์ความคิดเห็น</button>
                 </div>
 
-                <!-- Automation Settings Box -->
-                <div class="card glass" style="padding: 20px; align-items: stretch;">
-                    <div class="card-title" style="margin-bottom: 12px;">⚙️ Automation Config</div>
+                <!-- Automation Settings Box (High Contrast Design) -->
+                <div class="card glass" style="padding: 20px; align-items: stretch; border: 1px solid rgba(255, 46, 46, 0.25); box-shadow: 0 0 15px rgba(255, 46, 46, 0.05);">
+                    <div class="card-title" style="margin-bottom: 15px; color: #ff4d4d; display: flex; align-items: center; gap: 8px; font-size: 1.1rem; font-weight: 700;">
+                        <span>⚙️ ตั้งค่าระบบตอบกลับ (Automation Config)</span>
+                    </div>
                     
-                    <div class="form-group">
-                        <label for="config-target">จำกัดตอบคอมเมนต์สูงสุด (Max Target)</label>
-                        <input type="number" id="config-target" class="form-input" value="100" min="1">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="config-target" style="display: block; font-size: 0.85rem; color: #ffffff; margin-bottom: 6px; font-weight: 600;">🎯 จำนวนคอมเมนต์เป้าหมายสูงสุด (Max Target):</label>
+                        <input type="number" id="config-target" class="form-input" value="100" min="1" style="width: 100%; height: 38px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #ffffff; border-radius: 8px; padding: 0 12px; font-family: inherit; font-size: 0.95rem; font-weight: bold; box-sizing: border-box;">
                     </div>
 
-                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
-                        <label class="custom-chk">
-                            <input type="checkbox" id="config-only-like">
-                            <span class="chk-mark"></span>
-                            <span style="font-size: 0.85rem;">กดไลก์อย่างเดียว ไม่ต้องตอบกลับ</span>
+                    <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+                        <label class="custom-chk" style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
+                            <input type="checkbox" id="config-only-like" style="transform: scale(1.1);">
+                            <span class="chk-mark" style="border-color: rgba(255,255,255,0.35);"></span>
+                            <span style="font-size: 0.9rem; color: #ffffff; font-weight: 600;">👍 กดถูกใจอย่างเดียว (Like Only)</span>
                         </label>
-                        <label class="custom-chk">
-                            <input type="checkbox" id="config-delete-spam" checked>
-                            <span class="chk-mark"></span>
-                            <span style="font-size: 0.85rem;">ลบคอมเมนต์สแปม/ลิงก์การพนันอัตโนมัติ</span>
+                        <label class="custom-chk" style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
+                            <input type="checkbox" id="config-delete-spam" checked style="transform: scale(1.1);">
+                            <span class="chk-mark" style="border-color: rgba(255,255,255,0.35);"></span>
+                            <span style="font-size: 0.9rem; color: #ffffff; font-weight: 600;">🛡️ ลบความคิดเห็นสแปม / เว็บพนัน</span>
                         </label>
                     </div>
                 </div>
@@ -303,8 +305,10 @@
                 <div class="card glass" style="padding: 20px; align-items: stretch; min-height: 350px;">
                     <div class="card-title" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <span>📋 คอมเมนต์ที่รออนุมัติสิทธิ์ (Select Comments & Generate replies)</span>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn btn-secondary" id="btn-generate-selected" style="font-size: 0.8rem; padding: 6px 12px; display: none;">🧠 ให้ Gemini คิดคำตอบรายการที่เลือก</button>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button class="btn btn-secondary" id="btn-generate-selected" style="font-size: 0.8rem; padding: 6px 12px; display: none; background-color: rgba(52, 152, 219, 0.2); border-color: rgba(52, 152, 219, 0.4); color: #3498db; font-weight: bold;">🧠 ให้ Gemini คิดคำตอบที่เลือก</button>
+                            <button class="btn btn-primary" id="btn-reply-selected" style="font-size: 0.8rem; padding: 6px 12px; display: none; background-color: #00b894; font-weight: bold;">⚡ ส่งคำตอบที่เลือกทั้งหมด</button>
+                            <button class="btn btn-secondary" id="btn-delete-spam-batch" style="font-size: 0.8rem; padding: 6px 12px; display: none; background-color: rgba(231, 76, 60, 0.2); border-color: rgba(231, 76, 60, 0.4); color: #ff4a4a; font-weight: bold;">🗑️ ลบสแปมทั้งหมดที่ตรวจพบ</button>
                         </div>
                     </div>
 
@@ -420,7 +424,12 @@
                     </td>
                 </tr>
             `;
+            const replySelectedBtn = document.getElementById('btn-reply-selected');
+            const deleteSpamBtn = document.getElementById('btn-delete-spam-batch');
+
             genSelectedBtn.style.display = 'none';
+            replySelectedBtn.style.display = 'none';
+            deleteSpamBtn.style.display = 'none';
             document.getElementById('btn-start-bot').disabled = true;
             commentList = [];
 
@@ -448,26 +457,50 @@
                     return;
                 }
 
+                // Show batch actions
                 genSelectedBtn.style.display = 'inline-block';
+                replySelectedBtn.style.display = 'inline-block';
                 document.getElementById('btn-start-bot').disabled = false;
+
+                let hasSpam = false;
 
                 commentList.forEach((c, index) => {
                     const tr = document.createElement('tr');
                     tr.dataset.commentId = c.id;
                     
+                    if (c.is_spam) {
+                        tr.style.background = 'rgba(231, 76, 60, 0.1)';
+                        hasSpam = true;
+                    }
+                    
                     let taskBadges = '';
+                    if (c.is_spam) {
+                        taskBadges += '<span class="badge-need spam" style="background: rgba(231, 76, 60, 0.2); color: #ff4a4a; border: 1px solid rgba(231, 76, 60, 0.3); margin-right: 4px;">🚨 สแปม</span>';
+                    }
                     if (c.likes_needed > 0) taskBadges += '<span class="badge-need like" style="margin-right: 4px;">👍 ไดก์</span>';
-                    if (c.replies_needed > 0) taskBadges += '<span class="badge-need reply">💬 ตอบกลับ</span>';
+                    if (c.replies_needed > 0 && !c.is_spam) taskBadges += '<span class="badge-need reply">💬 ตอบกลับ</span>';
                     if (!taskBadges) taskBadges = '<span style="color: var(--text-secondary); font-size:0.75rem;">เรียบร้อยแล้ว</span>';
 
-                    // Generate AI reply button
-                    const aiActionCell = c.replies_needed > 0 
-                        ? `<button class="btn btn-secondary btn-gen-single" data-index="${index}" style="padding: 4px 8px; font-size: 0.75rem; margin: 0 auto; display: block;">🤖 คิดคำตอบ</button>`
-                        : `<span style="color: var(--text-secondary); font-size: 0.75rem; text-align: center; display: block;">ไม่ต้องตอบ</span>`;
+                    // Actions Cell
+                    let actionsHtml = '';
+                    if (c.is_spam) {
+                        actionsHtml = `<button class="btn btn-secondary btn-delete-single" data-comment-id="${c.id}" style="padding: 6px 10px; font-size: 0.75rem; background-color: rgba(231, 76, 60, 0.2); border-color: rgba(231, 76, 60, 0.4); color: #ff4a4a; width: 100%; font-weight: bold;">🗑️ ลบคอมเมนต์</button>`;
+                    } else if (c.replies_needed > 0) {
+                        actionsHtml = `
+                            <div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
+                                <button class="btn btn-secondary btn-gen-single" data-index="${index}" style="padding: 4px 8px; font-size: 0.75rem; width: 100%;">🤖 คิดคำตอบ</button>
+                                <button class="btn btn-primary btn-reply-single" data-comment-id="${c.id}" style="padding: 4px 8px; font-size: 0.75rem; width: 100%; background-color: #00b894;">💬 ตอบเลย</button>
+                            </div>
+                        `;
+                    } else if (c.likes_needed > 0) {
+                        actionsHtml = `<button class="btn btn-primary btn-reply-single" data-comment-id="${c.id}" style="padding: 4px 8px; font-size: 0.75rem; width: 100%; background-color: #00b894;">👍 ไลก์เลย</button>`;
+                    } else {
+                        actionsHtml = `<span style="color: var(--text-secondary); font-size: 0.75rem; text-align: center; display: block;">เรียบร้อยแล้ว</span>`;
+                    }
 
                     tr.innerHTML = `
                         <td style="text-align: center; vertical-align: middle;">
-                            ${c.replies_needed > 0 ? `<input type="checkbox" class="comment-select-chk" value="${c.id}" checked>` : ''}
+                            ${(c.replies_needed > 0 && !c.is_spam) ? `<input type="checkbox" class="comment-select-chk" value="${c.id}" checked>` : ''}
                         </td>
                         <td>
                             <strong style="color: #ff4d4d; display: block; font-size: 0.85rem; margin-bottom: 4px;">👤 ${c.user_name === 'User' ? 'ผู้แสดงความคิดเห็น (FB User)' : c.user_name}</strong>
@@ -475,21 +508,41 @@
                         </td>
                         <td style="text-align: center;">${taskBadges}</td>
                         <td>
-                            ${c.replies_needed > 0 
-                                ? `<textarea class="audit-reply-textarea" data-comment-id="${c.id}" rows="2" placeholder="คลิกปุ่ม 'คิดคำตอบ' หรือพิมพ์ข้อความที่นี่..."></textarea>` 
-                                : '<span style="color: var(--text-secondary); font-size:0.75rem; font-style:italic;">ข้าม (ไม่ต้องพิมพ์ตอบ)</span>'}
+                            ${c.is_spam 
+                                ? '<span style="color: #ff4a4a; font-size:0.85rem; font-weight: bold; font-style:italic;">⚠️ ตรวจพบลิงก์สแปม/เว็บพนัน</span>'
+                                : (c.replies_needed > 0 
+                                    ? `<textarea class="audit-reply-textarea" data-comment-id="${c.id}" rows="2" placeholder="คลิกปุ่ม 'คิดคำตอบ' หรือพิมพ์ข้อความที่นี่..."></textarea>` 
+                                    : '<span style="color: var(--text-secondary); font-size:0.75rem; font-style:italic;">ข้าม (ไม่ต้องพิมพ์ตอบ)</span>')}
                         </td>
-                        <td>${aiActionCell}</td>
+                        <td style="text-align: center; vertical-align: middle;">${actionsHtml}</td>
                     `;
                     tbody.appendChild(tr);
                 });
 
-                // Wire up single generator buttons
+                if (hasSpam) {
+                    deleteSpamBtn.style.display = 'inline-block';
+                }
+
+                // Wire up single actions listeners
                 document.querySelectorAll('.btn-gen-single').forEach(btn => {
                     btn.addEventListener('click', async () => {
                         const idx = parseInt(btn.dataset.index, 10);
                         const c = commentList[idx];
                         await generateSingleReply(c.id, c.message, btn);
+                    });
+                });
+
+                document.querySelectorAll('.btn-reply-single').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const commentId = btn.dataset.commentId;
+                        await processSingleReply(commentId, btn);
+                    });
+                });
+
+                document.querySelectorAll('.btn-delete-single').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const commentId = btn.dataset.commentId;
+                        await processSingleDelete(commentId, btn);
                     });
                 });
                 
@@ -560,7 +613,144 @@
             }
 
             btn.disabled = false;
-            btn.textContent = '🧠 ให้ Gemini คิดคำตอบรายการที่เลือก';
+            btn.textContent = '🧠 ให้ Gemini คิดคำตอบที่เลือก';
+        }
+
+        // Process reply for a single comment instantly
+        async function processSingleReply(commentId, buttonElement) {
+            const textarea = document.querySelector(`.audit-reply-textarea[data-comment-id="${commentId}"]`);
+            const replyText = textarea ? textarea.value.trim() : '';
+            const isLikeOnly = !replyText;
+            
+            buttonElement.disabled = true;
+            buttonElement.textContent = '⏳ กำลังส่ง...';
+            
+            try {
+                const res = await fetch('/api/reply-single-comment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        comment_id: commentId,
+                        reply_message: replyText,
+                        like: true
+                    })
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                
+                const td = buttonElement.parentElement;
+                td.innerHTML = '<span style="color: #2ecc71; font-weight: bold; font-size: 0.8rem;">✅ สำเร็จ (Success)</span>';
+                
+                // Disable textarea
+                if (textarea) {
+                    textarea.disabled = true;
+                    textarea.style.opacity = '0.6';
+                }
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการตอบคอมเมนต์: ' + err.message);
+                buttonElement.textContent = isLikeOnly ? '👍 ไลก์เลย' : '💬 ตอบเลย';
+                buttonElement.disabled = false;
+            }
+        }
+
+        // Process delete for a single comment instantly
+        async function processSingleDelete(commentId, buttonElement) {
+            if (!confirm('คุณแน่ใจว่าต้องการลบความคิดเห็นสแปมรายการนี้ออกจากโพสต์ทันที?')) return;
+            buttonElement.disabled = true;
+            buttonElement.textContent = '⏳ กำลังลบ...';
+            
+            try {
+                const res = await fetch('/api/delete-comment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ comment_id: commentId })
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                
+                const tr = buttonElement.closest('tr');
+                tr.style.opacity = '0.3';
+                const td = buttonElement.parentElement;
+                td.innerHTML = '<span style="color: #e74c3c; font-weight: bold; font-size: 0.8rem;">🗑️ ลบแล้ว</span>';
+            } catch (err) {
+                alert('ลบคอมเมนต์ล้มเหลว: ' + err.message);
+                buttonElement.textContent = '🗑️ ลบคอมเมนต์';
+                buttonElement.disabled = false;
+            }
+        }
+
+        // Process batch replies for all selected checked comments
+        async function processBatchReplies() {
+            const checkedBoxes = document.querySelectorAll('.comment-select-chk:checked');
+            if (checkedBoxes.length === 0) {
+                alert('กรุณาติ๊กเลือกคอมเมนต์ที่ต้องการตอบแบบกลุ่มก่อนครับ');
+                return;
+            }
+            
+            const commentsPayload = [];
+            checkedBoxes.forEach(cb => {
+                const commentId = cb.value;
+                const textarea = document.querySelector(`.audit-reply-textarea[data-comment-id="${commentId}"]`);
+                const replyText = textarea ? textarea.value.trim() : '';
+                commentsPayload.push({
+                    comment_id: commentId,
+                    reply_message: replyText,
+                    like: true
+                });
+            });
+            
+            const btn = document.getElementById('btn-reply-selected');
+            btn.disabled = true;
+            btn.textContent = '⏳ กำลังส่งตอบกลุ่ม...';
+            
+            try {
+                const res = await fetch('/api/reply-all-comments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ comments: commentsPayload })
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                
+                alert(`ดำเนินการกลุ่มสำเร็จ! กดไลก์ไป ${data.likes_sent} รายการ และ ตอบข้อความไป ${data.replies_sent} รายการ`);
+                auditComments(); // Refresh table
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการรันงานกลุ่ม: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '⚡ ส่งคำตอบที่เลือกทั้งหมด';
+            }
+        }
+
+        // Delete all detected spam comments in one click
+        async function processBatchDeleteSpam() {
+            const spamButtons = document.querySelectorAll('.btn-delete-single');
+            if (spamButtons.length === 0) return;
+            
+            if (!confirm(`คุณแน่ใจว่าต้องการลบสแปมทั้งหมดจำนวน ${spamButtons.length} รายการที่ระบบตรวจพบทันที?`)) return;
+            
+            const btn = document.getElementById('btn-delete-spam-batch');
+            btn.disabled = true;
+            btn.textContent = '⏳ กำลังกวาดล้างสแปมทั้งหมด...';
+            
+            let deleteSuccess = 0;
+            for (const sBtn of spamButtons) {
+                const commentId = sBtn.dataset.commentId;
+                try {
+                    const res = await fetch('/api/delete-comment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ comment_id: commentId })
+                    });
+                    const data = await res.json();
+                    if (data.success) deleteSuccess++;
+                } catch (e) {
+                    console.log('Failed to delete comment in batch:', commentId);
+                }
+            }
+            
+            alert(`กวาดล้างเสร็จสิ้น! ลบคอมเมนต์สแปมออกไปทั้งหมด ${deleteSuccess} รายการ`);
+            auditComments(); // Refresh table
         }
 
         // Start Automation
@@ -706,6 +896,8 @@
         document.getElementById('btn-fetch-posts').addEventListener('click', fetchPosts);
         document.getElementById('btn-audit-comments').addEventListener('click', auditComments);
         document.getElementById('btn-generate-selected').addEventListener('click', generateSelectedReplies);
+        document.getElementById('btn-reply-selected').addEventListener('click', processBatchReplies);
+        document.getElementById('btn-delete-spam-batch').addEventListener('click', processBatchDeleteSpam);
         document.getElementById('btn-start-bot').addEventListener('click', startAutomation);
         document.getElementById('btn-stop-bot').addEventListener('click', stopAutomation);
 

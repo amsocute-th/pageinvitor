@@ -13,7 +13,11 @@ from bulk_like_and_reply import (
     has_already_replied,
     has_meaningful_text,
     generate_ai_reply,
-    FRIENDLY_REPLIES
+    FRIENDLY_REPLIES,
+    delete_comment,
+    like_comment,
+    reply_to_comment,
+    is_spam_comment
 )
 
 app = Flask(__name__, static_folder='.')
@@ -140,6 +144,7 @@ def analyze_comments():
                     "replies_needed": replies_needed,
                     "proposed_reply": proposed_reply,
                     "is_emoji": not has_text,
+                    "is_spam": is_spam_comment(c.get("message", "")),
                     "post_id": pid
                 })
                 
@@ -151,6 +156,89 @@ def analyze_comments():
                 "replies_needed": total_replies_needed
             },
             "comments": detailed_comments
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/delete-comment', methods=['POST'])
+def delete_comment_api():
+    if IS_CLOUD:
+        return jsonify({"success": False, "error": "ระบบนี้ถูกกำหนดให้ทำงานบนเครื่อง Local เท่านั้น"}), 403
+    try:
+        data = request.get_json() or {}
+        comment_id = data.get('comment_id')
+        if not comment_id:
+            return jsonify({"success": False, "error": "Missing comment_id"}), 400
+        
+        success = delete_comment(comment_id)
+        if success:
+            return jsonify({"success": True})
+        else:
+            return jsonify({"success": False, "error": "Facebook API delete request failed"}), 500
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/reply-single-comment', methods=['POST'])
+def reply_single_comment_api():
+    if IS_CLOUD:
+        return jsonify({"success": False, "error": "ระบบนี้ถูกกำหนดให้ทำงานบนเครื่อง Local เท่านั้น"}), 403
+    try:
+        data = request.get_json() or {}
+        comment_id = data.get('comment_id')
+        reply_message = data.get('reply_message', '').strip()
+        do_like = data.get('like', False)
+        
+        if not comment_id:
+            return jsonify({"success": False, "error": "Missing comment_id"}), 400
+            
+        # Like if requested
+        if do_like:
+            like_comment(comment_id)
+            
+        # Reply if requested
+        if reply_message:
+            reply_to_comment(comment_id, reply_message)
+            
+        return jsonify({"success": True})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/reply-all-comments', methods=['POST'])
+def reply_all_comments_api():
+    if IS_CLOUD:
+        return jsonify({"success": False, "error": "ระบบนี้ถูกกำหนดให้ทำงานบนเครื่อง Local เท่านั้น"}), 403
+    try:
+        data = request.get_json() or {}
+        comments_data = data.get('comments', [])
+        
+        likes_done = 0
+        replies_done = 0
+        
+        for item in comments_data:
+            comment_id = item.get('comment_id')
+            reply_message = item.get('reply_message', '').strip()
+            do_like = item.get('like', False)
+            
+            if not comment_id:
+                continue
+                
+            if do_like:
+                if like_comment(comment_id):
+                    likes_done += 1
+            if reply_message:
+                if reply_to_comment(comment_id, reply_message):
+                    replies_done += 1
+                    
+        return jsonify({
+            "success": True, 
+            "likes_sent": likes_done, 
+            "replies_sent": replies_done
         })
     except Exception as e:
         import traceback
