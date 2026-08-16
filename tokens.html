@@ -93,6 +93,12 @@
                 <button class="btn btn-secondary" id="btn-refresh-clients" style="font-size: 0.8rem; padding: 6px 12px;">🔄 รีเฟรชรายชื่อเครื่อง (Refresh)</button>
             </div>
             
+            <!-- Manual Approval form -->
+            <div style="display: flex; gap: 10px; margin-bottom: 18px; align-items: center; max-width: 500px;">
+                <input type="text" id="manual-client-id" class="form-input" placeholder="พิมพ์หรือวางรหัสเครื่องที่ต้องการอนุมัติ (เช่น RCG-ID-XXXX)" style="font-family: monospace; font-size: 0.85rem; height: 38px; box-sizing: border-box; flex-grow: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: #ffffff; border-radius: 6px; padding: 0 10px;">
+                <button class="btn btn-primary" id="btn-manual-approve" style="width: auto; height: 38px; font-size: 0.85rem; padding: 0 15px; font-weight: bold; background-color: rgba(46, 204, 113, 0.2); border-color: rgba(46, 204, 113, 0.3); color: #2ecc71; border: 1px solid rgba(46,204,113,0.3); border-radius: 6px; cursor: pointer;">✅ อนุมัติทันที</button>
+            </div>
+            
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
                     <thead>
@@ -289,6 +295,28 @@
         document.getElementById('btn-refresh-tokens')?.addEventListener('click', fetchTokens);
         document.getElementById('btn-generate-backend-token')?.addEventListener('click', generateToken);
         document.getElementById('btn-refresh-clients')?.addEventListener('click', fetchClients);
+        
+        document.getElementById('btn-manual-approve')?.addEventListener('click', async () => {
+            const val = document.getElementById('manual-client-id').value.trim().toUpperCase();
+            if (!val) {
+                alert('กรุณากรอกรหัสเครื่องก่อนครับ');
+                return;
+            }
+            try {
+                const res = await fetch('/api/clients/approve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: val, action: 'approve' })
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                alert(`อนุมัติสิทธิ์รหัสเครื่อง ${val} เรียบร้อยแล้ว!`);
+                document.getElementById('manual-client-id').value = '';
+                fetchClients();
+            } catch (err) {
+                alert('เกิดข้อผิดพลาด: ' + err.message);
+            }
+        });
 
         // Load initially
         window.onload = function() {
