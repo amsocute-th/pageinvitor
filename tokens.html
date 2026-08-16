@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RaceGO Token Activation Control Center</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            transition: color 0.2s;
+        }
+        .back-link:hover {
+            color: #ff2e2e;
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-container" style="max-width: 900px; width: 100%;">
+        <!-- Header -->
+        <header style="margin-bottom: 30px;">
+            <a href="/" class="back-link">
+                <span>◀ กลับหน้าแรก (Back to Home)</span>
+            </a>
+            <div class="header-logo" style="margin-top: 10px;">
+                <span class="pulse-indicator" style="background-color: var(--color-warning); box-shadow: 0 0 8px var(--color-warning);"></span>
+                <h1 style="font-size: 1.8rem;">RaceGO Token Manager</h1>
+            </div>
+            <div class="header-title">ระบบจัดการเหรียญและรหัสเติมเงินหลังบ้านสำหรับ RaceGO FB Page Inviter</div>
+        </header>
+
+        <!-- Generate Token Box -->
+        <div class="card glass" style="padding: 24px; align-items: stretch; margin-bottom: 25px;">
+            <div class="card-title" style="margin-bottom: 15px; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                🪙 ผลิตรหัสเติมเหรียญใหม่ (Generate New Activation Code)
+            </div>
+            
+            <div style="display: flex; gap: 15px; background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); align-items: flex-end; flex-wrap: wrap;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="token-gen-value" style="font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 6px;">มูลค่าเหรียญที่จะสร้าง (Token Value)</label>
+                    <select id="token-gen-value" class="form-input" style="min-width: 180px; height: 38px;">
+                        <option value="100">100 Tokens</option>
+                        <option value="300">300 Tokens</option>
+                        <option value="500" selected>500 Tokens</option>
+                        <option value="1000">1,000 Tokens</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" id="btn-generate-backend-token" style="font-size: 0.9rem; padding: 10px 20px; height: 38px;">➕ สร้างรหัสเติมเหรียญ (Generate)</button>
+                <div id="new-token-display" style="font-family: monospace; font-size: 1.05rem; font-weight: bold; color: var(--color-warning); padding: 8px 16px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid var(--border-color); display: none; height: 38px; align-items: center; box-sizing: border-box;"></div>
+            </div>
+        </div>
+
+        <!-- Token Codes Table -->
+        <div class="card glass" style="padding: 24px; align-items: stretch;">
+            <div class="card-title" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; font-size: 1.15rem;">
+                <span>📜 ประวัติรหัสเปิดใช้งานทั้งหมด (Activation Codes History Log)</span>
+                <button class="btn btn-secondary" id="btn-refresh-tokens" style="font-size: 0.8rem; padding: 6px 12px;">🔄 โหลดข้อมูลใหม่ (Refresh)</button>
+            </div>
+            
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary);">
+                            <th style="padding: 12px 10px;">รหัสเติมเงิน (Activation Code)</th>
+                            <th style="padding: 12px 10px; text-align: center;">มูลค่าเริ่มต้น</th>
+                            <th style="padding: 12px 10px; text-align: center;">เหรียญคงเหลือ</th>
+                            <th style="padding: 12px 10px; text-align: center;">สถานะ (Status)</th>
+                            <th style="padding: 12px 10px;">วันที่ใช้ (Used At)</th>
+                            <th style="padding: 12px 10px;">ซิงค์ล่าสุด (Last Sync)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="token-list-tbody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 25px; color: var(--text-secondary); font-style: italic;">
+                                กำลังโหลดข้อมูลรหัสเปิดใช้งาน...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer style="margin-top: 40px; text-align: center; font-size: 0.8rem; color: var(--text-secondary); border-top: 1px solid var(--border-color); padding-top: 20px;">
+            &copy; 2026 RaceGO Management Co.,ltd. All rights reserved.
+        </footer>
+    </div>
+
+    <script>
+        async function fetchTokens() {
+            const tbody = document.getElementById('token-list-tbody');
+            if (!tbody) return;
+            
+            try {
+                const res = await fetch('/api/tokens');
+                const data = await res.json();
+                
+                if (!data.success) throw new Error(data.error || "Unknown error");
+                
+                tbody.innerHTML = '';
+                const codes = Object.keys(data.tokens).sort((a, b) => {
+                    return new Date(data.tokens[b].created_at) - new Date(data.tokens[a].created_at);
+                });
+                
+                if (codes.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 25px; color: var(--text-secondary); font-style: italic;">
+                                ยังไม่มีข้อมูลรหัสเติมเงิน (No tokens generated yet)
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                codes.forEach(code => {
+                    const info = data.tokens[code];
+                    const tr = document.createElement('tr');
+                    tr.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
+                    
+                    let statusBadge = '';
+                    if (info.status === 'valid') {
+                        statusBadge = `<span style="background: rgba(46, 204, 113, 0.15); color: #2ecc71; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">ใช้งานได้ (Valid)</span>`;
+                    } else {
+                        statusBadge = `<span style="background: rgba(255,255,255,0.08); color: var(--text-secondary); padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">ใช้แล้ว (Used)</span>`;
+                    }
+                    
+                    tr.innerHTML = `
+                        <td style="padding: 12px 10px; font-family: monospace; font-weight: 700; color: #ff2e2e; display: flex; align-items: center; gap: 10px;">
+                            <span>${code}</span>
+                            <span style="color: var(--text-secondary); cursor: pointer; text-decoration: underline; font-size: 0.75rem; font-family: inherit;" onclick="navigator.clipboard.writeText('${code}'); alert('คัดลอกรหัสเติมเงินสำเร็จ!');">คัดลอก</span>
+                        </td>
+                        <td style="padding: 12px 10px; text-align: center; font-weight: 700; color: var(--text-secondary); font-size: 0.95rem;">${info.value.toLocaleString()}</td>
+                        <td style="padding: 12px 10px; text-align: center; font-weight: 900; color: var(--color-warning); font-size: 0.95rem;">${info.remaining_tokens !== undefined ? info.remaining_tokens.toLocaleString() : '-'}</td>
+                        <td style="padding: 12px 10px; text-align: center;">${statusBadge}</td>
+                        <td style="padding: 12px 10px; color: var(--text-secondary);">${info.used_at || '-'}</td>
+                        <td style="padding: 12px 10px; color: var(--text-secondary);">${info.last_sync_at || '-'}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 25px; color: var(--text-error);">
+                            ไม่สามารถโหลดข้อมูลรหัสเติมเงินได้: ${err.message}
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        async function generateToken() {
+            const valSelect = document.getElementById('token-gen-value');
+            const display = document.getElementById('new-token-display');
+            if (!valSelect || !display) return;
+            
+            const value = parseInt(valSelect.value, 10) || 500;
+            display.style.display = 'flex';
+            display.style.color = 'var(--text-secondary)';
+            display.textContent = 'กำลังสร้างรหัส...';
+            
+            try {
+                const res = await fetch('/api/tokens/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ value })
+                });
+                const data = await res.json();
+                
+                if (!data.success) throw new Error(data.error || "Failed to generate token");
+                
+                display.style.color = 'var(--color-warning)';
+                display.innerHTML = `รหัส: <strong style="color: #ffffff; margin: 0 10px; font-size: 1.1rem;">${data.code}</strong> <span style="color: var(--color-success); cursor: pointer; text-decoration: underline; font-size: 0.8rem;" onclick="navigator.clipboard.writeText('${data.code}'); alert('คัดลอกรหัสแล้ว!');">คัดลอก</span>`;
+                fetchTokens();
+            } catch (err) {
+                display.style.color = 'var(--color-error)';
+                display.textContent = `เกิดข้อผิดพลาด: ${err.message}`;
+            }
+        }
+
+        // Wire up UI events
+        document.getElementById('btn-refresh-tokens')?.addEventListener('click', fetchTokens);
+        document.getElementById('btn-generate-backend-token')?.addEventListener('click', generateToken);
+
+        // Load initially
+        window.onload = fetchTokens;
+    </script>
+</body>
+</html>

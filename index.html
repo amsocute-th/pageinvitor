@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RaceGO Page Automation Control Hub</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            width: 100%;
+            margin-top: 30px;
+        }
+
+        .portal-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-start;
+            min-height: 240px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .portal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: transparent;
+            transition: background 0.3s;
+        }
+
+        .portal-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 46, 46, 0.3);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3), 0 0 15px var(--glow-color);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .portal-card:hover::before {
+            background: var(--color-primary);
+        }
+
+        .portal-icon {
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+            background: rgba(255, 46, 46, 0.08);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 46, 46, 0.15);
+        }
+
+        .portal-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            font-style: italic;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+        }
+
+        .portal-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .btn-portal {
+            width: 100%;
+            text-align: center;
+            justify-content: center;
+            text-decoration: none;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-container" style="max-width: 1000px; width: 100%;">
+        <!-- Header -->
+        <header style="margin-bottom: 40px; text-align: center; display: flex; flex-direction: column; align-items: center;">
+            <div class="header-logo" style="margin-bottom: 10px;">
+                <span class="pulse-indicator" style="background-color: #ff2e2e; box-shadow: 0 0 8px #ff2e2e;"></span>
+                <h1 style="font-size: 2.2rem; letter-spacing: -1px;">RaceGO Control Hub</h1>
+            </div>
+            <div class="header-title" style="font-size: 1rem; color: var(--text-secondary);">ศูนย์กลางจัดการระบบบอท Facebook Page และส่วนขยายระบบอัตโนมัติ</div>
+        </header>
+
+        <!-- Project Cards Grid -->
+        <div class="portal-grid">
+            
+            <!-- Card 1: Live Comment Bot -->
+            <div class="portal-card">
+                <div>
+                    <div class="portal-icon">💬</div>
+                    <div class="portal-title">Live Comment Automation</div>
+                    <div class="portal-desc">บอทวิเคราะห์คำตอบอัจฉริยะ ตรวจสอบและกดไลก์-ตอบกลับคอมเมนต์ของแฟนเพจอัตโนมัติแบบ Real-time โดยใช้พลังของ Gemini AI</div>
+                </div>
+                <a href="bot.html" class="btn btn-primary btn-portal">🚀 เข้าสู่ศูนย์ควบคุมบอท (Enter Dashboard)</a>
+            </div>
+
+            <!-- Card 2: FB Page Invitor -->
+            <div class="portal-card">
+                <div>
+                    <div class="portal-icon">✉️</div>
+                    <div class="portal-title">FB Page Inviter Extension</div>
+                    <div class="portal-desc">ส่วนขยาย Chrome Extension ส่งคำเชิญผู้ใช้ที่เข้ามากดถูกใจโพสต์ให้กดติดตามเพจ มีระบบควบคุมสุ่มหน่วงเวลา 2-10 วิ และระบบตัดเหรียญป้องกันการบล็อก</div>
+                </div>
+                <a href="#extension-info" onclick="document.getElementById('extension-info-card').scrollIntoView({behavior: 'smooth'});" class="btn btn-secondary btn-portal">📥 ดูคู่มือการติดตั้งส่วนเสริม (Setup Guide)</a>
+            </div>
+
+            <!-- Card 3: Token Manager -->
+            <div class="portal-card">
+                <div>
+                    <div class="portal-icon">🪙</div>
+                    <div class="portal-title">Token Backend Manager</div>
+                    <div class="portal-desc">ระบบหลังบ้านผลิตรหัสเติมเหรียญสะสม (Activation Tokens) สำหรับใช้งานส่วนขยายส่งคำเชิญ พร้อมรายงานประวัติรหัสที่ถูกใช้แบบเรียลไทม์</div>
+                </div>
+                <a href="tokens.html" class="btn btn-primary btn-portal" style="background-color: var(--color-warning); color: #06080d;">🪙 จัดการรหัสเติมเหรียญ (Token Wallet)</a>
+            </div>
+
+        </div>
+
+        <!-- Extension Info Setup Card -->
+        <div class="card glass" id="extension-info-card" style="margin-top: 40px; padding: 24px; align-items: stretch;">
+            <div class="card-title" style="margin-bottom: 15px; font-size: 1.15rem; color: #ff2e2e;">
+                📦 คู่มือติดตั้งส่วนเสริม RaceGO FB Page Inviter (Chrome Extension)
+            </div>
+            
+            <div style="font-size: 0.9rem; line-height: 1.6; color: var(--text-secondary);">
+                <p style="margin-bottom: 10px;">ทำตามขั้นตอนต่อไปนี้เพื่อติดตั้งตัวสแปมบอทส่งคำเชิญลงในคอมพิวเตอร์ของคุณ:</p>
+                <ol style="margin-left: 20px; margin-bottom: 15px;">
+                    <li>เปิดโปรแกรมเบราว์เซอร์ Google Chrome หรือ Microsoft Edge</li>
+                    <li>เข้าลิงก์หน้าจัดการส่วนเสริม: <strong style="color: #ffffff; font-family: monospace;">chrome://extensions/</strong></li>
+                    <li>เปิดโหมดนักพัฒนาซอฟต์แวร์ **"Developer mode"** ที่มุมบนขวาของหน้าต่าง</li>
+                    <li>กดปุ่ม **"Load unpacked"** (โหลดส่วนขยายที่แยกไฟล์แล้ว) ที่มุมบนซ้าย</li>
+                    <li>เลือกโฟลเดอร์โครงการ: <strong style="color: #ff2e2e; font-family: monospace;">/Users/amsocute/Desktop/FaceBook/fb_inviter_extension</strong></li>
+                </ol>
+                <div style="background: rgba(255,46,46,0.03); border: 1px solid rgba(255,46,46,0.15); padding: 12px; border-radius: 8px; font-size: 0.85rem; color: var(--text-primary);">
+                    <strong>💡 คำแนะนำการใช้งาน:</strong> เปิดแท็บรายชื่อคนกดไลก์บน Facebook ค้างไว้ จากนั้นกดเปิด Extension ขึ้นมาแล้วกดปุ่ม **"RaceGo !!!"** เพื่อเริ่มเชิญได้ทันที!
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer style="margin-top: 50px; text-align: center; font-size: 0.8rem; color: var(--text-secondary); border-top: 1px solid var(--border-color); padding-top: 20px;">
+            &copy; 2026 RaceGO Management Co.,ltd. All rights reserved.
+        </footer>
+    </div>
+</body>
+</html>

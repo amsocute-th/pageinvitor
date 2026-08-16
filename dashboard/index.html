@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motorsport News Approval Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="logo-container">
+            <span class="logo-accent"></span>
+            <h1>MOTORSPORT DRAFT APPROVAL</h1>
+        </div>
+        <div class="header-status">
+            <span class="status-indicator active"></span>
+            <span>Facebook Page Live Connection</span>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+        <!-- Control Card at Top -->
+        <section class="control-section">
+            <button id="fetch-btn" class="btn primary-btn">
+                <span class="icon">🔄</span> ดึงข่าวสารและสร้างแบบร่างใหม่ (AI Draft)
+            </button>
+            <div id="original-news-meta" class="meta-card hidden">
+                <strong>ข่าวต้นฉบับ:</strong> <span id="orig-title">N/A</span>
+            </div>
+        </section>
+
+        <div class="grid-layout">
+            <!-- Left Side: Live Image Preview -->
+            <section class="preview-panel">
+                <h2>การ์ดข่าวสารพรีวิว (Graphic Card Preview)</h2>
+                <div class="image-wrapper">
+                    <img id="draft-img" src="news_card.png?t=0" alt="News Card Draft" class="draft-image">
+                    <div id="image-overlay-loading" class="overlay-loader hidden">
+                        <div class="spinner"></div>
+                        <p>กำลังเจ็นรูปภาพ...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Side: Editor Panel -->
+            <section class="editor-panel">
+                <h2>รายละเอียดแบบร่าง (Draft Details)</h2>
+                
+                <div class="form-group">
+                    <label for="headline-input">หัวข้อข่าวหลัก (Headline on Image)</label>
+                    <input type="text" id="headline-input" placeholder="กำลังรอข้อมูลข่าว...">
+                </div>
+
+                <div class="form-group">
+                    <label for="desc-input">คำอธิบายภาพข่าว (Description on Image)</label>
+                    <textarea id="desc-input" rows="4" placeholder="กำลังรอข้อมูลข่าว..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="caption-input">แคปชันเฟสบุ๊ค (Facebook Caption)</label>
+                    <textarea id="caption-input" class="caption-textarea" rows="6" placeholder="กำลังรอข้อมูลข่าว..."></textarea>
+                </div>
+
+                <div class="action-bar">
+                    <button id="update-btn" class="btn secondary-btn">
+                        👁️ อัปเดตรูปภาพการ์ดข่าว
+                    </button>
+                    <button id="publish-btn" class="btn success-btn">
+                        🚀 อนุมัติและโพสต์ขึ้น Facebook (Approve)
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script>
+        const API_DRAFT = '/api/draft';
+        const API_UPDATE = '/api/update';
+        const API_APPROVE = '/api/approve';
+
+        // Elements
+        const draftImg = document.getElementById('draft-img');
+        const imgLoader = document.getElementById('image-overlay-loading');
+        const headlineInput = document.getElementById('headline-input');
+        const descInput = document.getElementById('desc-input');
+        const captionInput = document.getElementById('caption-input');
+        const fetchBtn = document.getElementById('fetch-btn');
+        const updateBtn = document.getElementById('update-btn');
+        const publishBtn = document.getElementById('publish-btn');
+        const origNewsMeta = document.getElementById('original-news-meta');
+        const origTitle = document.getElementById('orig-title');
+        const toast = document.getElementById('toast');
+
+        // Show toast alert
+        function showToast(message, type = 'info') {
+            toast.className = `toast ${type}`;
+            toast.innerText = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 4000);
+        }
+
+        // Fetch draft news
+        async function fetchNewDraft() {
+            imgLoader.classList.remove('hidden');
+            fetchBtn.disabled = true;
+            try {
+                showToast("กำลังดึงข่าวล่าสุดและสร้างคำบรรยายด้วย AI...", "info");
+                const response = await fetch(API_DRAFT);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const draft = data.draft;
+                    headlineInput.value = draft.headline;
+                    descInput.value = draft.description;
+                    captionInput.value = draft.caption;
+                    origTitle.innerText = `[${draft.source}] ${draft.original_title}`;
+                    origNewsMeta.classList.remove('hidden');
+                    
+                    // Refresh image with a cache-busting timestamp
+                    draftImg.src = `/news_card.png?t=${new Date().getTime()}`;
+                    showToast("ดึงข้อมูลและเจ็นรูปการ์ดข่าวสำเร็จ!", "success");
+                } else {
+                    showToast(`เกิดข้อผิดพลาด: ${data.error}`, "error");
+                }
+            } catch (err) {
+                showToast("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้", "error");
+            } finally {
+                imgLoader.classList.add('hidden');
+                fetchBtn.disabled = false;
+            }
+        }
+
+        // Update / Regenerate draft
+        async function updateDraft() {
+            imgLoader.classList.remove('hidden');
+            updateBtn.disabled = true;
+            try {
+                showToast("กำลังอัปเดตรูปการ์ดข่าว...", "info");
+                const payload = {
+                    headline: headlineInput.value,
+                    description: descInput.value,
+                    caption: captionInput.value
+                };
+                
+                const response = await fetch(API_UPDATE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    draftImg.src = `/news_card.png?t=${new Date().getTime()}`;
+                    showToast("อัปเดตและเจ็นการ์ดข่าวใบใหม่สำเร็จ!", "success");
+                } else {
+                    showToast(`ล้มเหลว: ${data.error}`, "error");
+                }
+            } catch (err) {
+                showToast("เกิดข้อผิดพลาดในการเซฟข้อมูล", "error");
+            } finally {
+                imgLoader.classList.add('hidden');
+                updateBtn.disabled = false;
+            }
+        }
+
+        // Publish to Facebook
+        async function publishPost() {
+            if (!confirm("คุณยืนยันต้องการอนุมัติโพสต์นี้และส่งขึ้น Facebook Page ทันทีหรือไม่?")) {
+                return;
+            }
+            
+            publishBtn.disabled = true;
+            try {
+                showToast("กำลังส่งรูปภาพข่าวไปยัง Facebook...", "info");
+                const response = await fetch(API_APPROVE, { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast("โพสต์สำเร็จ! ขึ้นหน้าเพจเรียบร้อยแล้ว 🚀", "success");
+                } else {
+                    showToast(`โพสต์ล้มเหลว: ${data.error}`, "error");
+                }
+            } catch (err) {
+                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อเพื่อโพสต์", "error");
+            } finally {
+                publishBtn.disabled = false;
+            }
+        }
+
+        // Event listeners
+        fetchBtn.addEventListener('click', fetchNewDraft);
+        updateBtn.addEventListener('click', updateDraft);
+        publishBtn.addEventListener('click', publishPost);
+
+        // Fetch initial draft on load
+        window.addEventListener('DOMContentLoaded', fetchNewDraft);
+    </script>
+</body>
+</html>

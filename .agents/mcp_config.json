@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "facebook-mcp-server": {
+      "command": "/Library/Frameworks/Python.framework/Versions/3.14/bin/python3",
+      "args": [
+        "/Users/amsocute/Desktop/FaceBook/server.py"
+      ],
+      "env": {
+        "FACEBOOK_ACCESS_TOKEN": "EAAZAKrmZBYEQIBSO0GsWMFjvM8N8w4RjRd52BTzbz9F2HZAwc5ZAdZCu0EOIb1nPWK4lq85wkZAEbPWeRTagV3PanA1ZAHKqAZBfq9MrcD4hR8J67FSITUepco8vpsZCZAOh28FeQxoowNQZADqpccNytRmfWOp9WP7yuZAWQBsx8lXZBC9kbj280KL9vqwpX3gSXgYeJz36B6mUZD",
+        "FACEBOOK_PAGE_ID": "274098623394001"
+      }
+    }
+  }
+}

@@ -8,7 +8,9 @@ class FacebookAPI:
     def _request(self, method: str, endpoint: str, params: dict[str, Any], json: dict[str, Any] = None) -> dict[str, Any]:
         url = f"{GRAPH_API_BASE_URL}/{endpoint}"
         params["access_token"] = PAGE_ACCESS_TOKEN
-        response = requests.request(method, url, params=params, json=json)
+        import random
+        rand_timeout = random.uniform(20.0, 30.0)
+        response = requests.request(method, url, params=params, json=json, timeout=rand_timeout)
         return response.json()
 
     def post_message(self, message: str) -> dict[str, Any]:
