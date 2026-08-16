@@ -464,7 +464,8 @@ def load_tokens():
                     "last_sync_at": doc.get("last_sync_at"),
                     "plan_name": doc.get("plan_name", "Custom"),
                     "expiration_days": doc.get("expiration_days", 30),
-                    "expires_at": doc.get("expires_at")
+                    "expires_at": doc.get("expires_at"),
+                    "remark": doc.get("remark", "")
                 }
             return tokens
         except Exception as e:
@@ -497,7 +498,8 @@ def save_tokens(tokens):
                         "last_sync_at": info.get("last_sync_at"),
                         "plan_name": info.get("plan_name", "Custom"),
                         "expiration_days": info.get("expiration_days", 30),
-                        "expires_at": info.get("expires_at")
+                        "expires_at": info.get("expires_at"),
+                        "remark": info.get("remark", "")
                     }},
                     upsert=True
                 )
@@ -532,6 +534,7 @@ def generate_token_api():
         value = int(data.get('value', 300))
         expiration_days = int(data.get('expiration_days', 7))
         plan_name = data.get('plan_name', 'Try 300Token')
+        remark = data.get('remark', '').strip()
         
         tokens = load_tokens()
         code = generate_random_code(value)
@@ -547,10 +550,40 @@ def generate_token_api():
             "last_sync_at": None,
             "plan_name": plan_name,
             "expiration_days": expiration_days,
-            "expires_at": None
+            "expires_at": None,
+            "remark": remark
         }
         save_tokens(tokens)
-        return jsonify({"success": True, "code": code, "value": value, "plan_name": plan_name, "expiration_days": expiration_days})
+        return jsonify({"success": True, "code": code, "value": value, "plan_name": plan_name, "expiration_days": expiration_days, "remark": remark})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/tokens/delete', methods=['POST'])
+def delete_token_api():
+    try:
+        data = request.get_json() or {}
+        code = data.get('code', '').strip().upper()
+        if not code:
+            return jsonify({"success": False, "error": "ไม่ได้ระบุรหัสเติมเงิน (Empty code)"}), 400
+            
+        tokens = load_tokens()
+        if code not in tokens:
+            return jsonify({"success": False, "error": "ไม่พบรหัสเติมเงินนี้ (Code not found)"}), 404
+            
+        if tokens[code]["status"] != "valid":
+            return jsonify({"success": False, "error": "ไม่สามารถลบรหัสที่เปิดใช้งานไปแล้วได้ (Already used)"}), 400
+            
+        # Delete from MongoDB if active
+        if tokens_col is not None and mongo_active:
+            try:
+                tokens_col.delete_one({"_id": code})
+            except Exception as e:
+                print(f"Error deleting token from Mongo: {e}")
+                
+        # Remove from local database
+        del tokens[code]
+        save_tokens(tokens)
+        return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
