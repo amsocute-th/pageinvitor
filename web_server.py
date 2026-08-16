@@ -382,9 +382,11 @@ if MONGODB_URI:
 
 # Clients Database Helpers
 CLIENTS_FILE = "clients.json"
+mongo_active = True
 
 def load_clients():
-    if clients_col is not None:
+    global mongo_active
+    if mongo_active and clients_col is not None:
         try:
             clients = {}
             for doc in clients_col.find():
@@ -397,9 +399,10 @@ def load_clients():
                 }
             return clients
         except Exception as e:
-            print(f"Error loading clients from Mongo: {e}")
+            print(f"Error loading clients from Mongo: {e}. Deactivating MongoDB database fallback.")
+            mongo_active = False
             
-    # Local JSON fallback
+    # Local JSON fallback (Executed instantly)
     if os.path.exists(CLIENTS_FILE):
         try:
             import json
@@ -410,7 +413,8 @@ def load_clients():
     return {}
 
 def save_clients(clients):
-    if clients_col is not None:
+    global mongo_active
+    if mongo_active and clients_col is not None:
         try:
             for cid, info in clients.items():
                 clients_col.update_one(
@@ -424,7 +428,8 @@ def save_clients(clients):
                     upsert=True
                 )
         except Exception as e:
-            print(f"Error saving clients to Mongo: {e}")
+            print(f"Error saving clients to Mongo: {e}. Deactivating MongoDB database fallback.")
+            mongo_active = False
             
     # Always write to local file as backup/fallback
     try:
@@ -438,7 +443,8 @@ def save_clients(clients):
 TOKENS_FILE = "tokens.json"
 
 def load_tokens():
-    if tokens_col is not None:
+    global mongo_active
+    if mongo_active and tokens_col is not None:
         try:
             tokens = {}
             for doc in tokens_col.find():
@@ -453,9 +459,10 @@ def load_tokens():
                 }
             return tokens
         except Exception as e:
-            print(f"RaceGO Backend: Error reading from MongoDB: {e}")
+            print(f"RaceGO Backend: Error reading from MongoDB: {e}. Deactivating MongoDB database fallback.")
+            mongo_active = False
             
-    # Local JSON fallback
+    # Local JSON fallback (Executed instantly)
     import json
     if os.path.exists(TOKENS_FILE):
         try:
@@ -466,7 +473,8 @@ def load_tokens():
     return {}
 
 def save_tokens(tokens):
-    if tokens_col is not None:
+    global mongo_active
+    if mongo_active and tokens_col is not None:
         try:
             for code, info in tokens.items():
                 tokens_col.update_one(
@@ -482,7 +490,8 @@ def save_tokens(tokens):
                     upsert=True
                 )
         except Exception as e:
-            print(f"RaceGO Backend: Error saving to MongoDB: {e}")
+            print(f"RaceGO Backend: Error saving to MongoDB: {e}. Deactivating MongoDB database fallback.")
+            mongo_active = False
             
     # Always write to local file as backup/fallback
     try:
