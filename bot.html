@@ -249,40 +249,7 @@
             <!-- Right Side: Comment Audit & Status Panel -->
             <div style="display: flex; flex-direction: column; gap: 20px;">
                 
-                <!-- Comment Audit List Card -->
-                <div class="card glass" style="padding: 20px; align-items: stretch; min-height: 400px;">
-                    <div class="card-title" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                        <span>📋 คอมเมนต์ที่รออนุมัติสิทธิ์ (Select Comments & Generate replies)</span>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn btn-secondary" id="btn-generate-selected" style="font-size: 0.8rem; padding: 6px 12px; display: none;">🧠 ให้ Gemini คิดคำตอบรายการที่เลือก</button>
-                        </div>
-                    </div>
-
-                    <div style="overflow-x: auto; flex-grow: 1;">
-                        <table class="audit-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 40px; text-align: center;">
-                                        <input type="checkbox" id="select-all-comments-chk">
-                                    </th>
-                                    <th>ข้อมูลผู้ใช้ & ข้อความ (User & Message)</th>
-                                    <th style="width: 120px; text-align: center;">สิ่งที่ต้องทำ (Task)</th>
-                                    <th>ร่างข้อความตอบกลับ AI (AI Proposed Reply)</th>
-                                    <th style="width: 110px; text-align: center;">คิดคำตอบ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="audit-table-tbody">
-                                <tr>
-                                    <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-secondary); font-style: italic;">
-                                        กรุณาเลือกโพสต์ทางด้านซ้าย และกด "สแกนและวิเคราะห์ความคิดเห็น" เพื่อเริ่มการตรวจสอบ
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Execution Stats & Live Logs Panel -->
+                <!-- Execution Stats & Live Logs Panel (Moved to Top for instant visibility) -->
                 <div class="card glass" style="padding: 20px; align-items: stretch;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                         <div class="card-title" style="margin-bottom: 0;">⚡ แผงสั่งการระบบบอทตอบคอมเมนต์ (Automation Console)</div>
@@ -316,8 +283,41 @@
                     </div>
 
                     <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">📋 บันทึกการทำงานเรียลไทม์ (Live Operation Logs) <span id="status-time" style="font-weight: 400; color: var(--text-secondary); margin-left: 8px;"></span></div>
-                    <div id="log-container" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; height: 160px; overflow-y: auto; font-family: monospace; font-size: 0.75rem; line-height: 1.5;">
+                    <div id="log-container" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; height: 130px; overflow-y: auto; font-family: monospace; font-size: 0.75rem; line-height: 1.5;">
                         <div class="log-line system" style="color: var(--text-secondary);">รอเปิดการทำงาน... (Awaiting start instruction)</div>
+                    </div>
+                </div>
+
+                <!-- Comment Audit List Card (Scrollable) -->
+                <div class="card glass" style="padding: 20px; align-items: stretch; min-height: 350px;">
+                    <div class="card-title" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <span>📋 คอมเมนต์ที่รออนุมัติสิทธิ์ (Select Comments & Generate replies)</span>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-secondary" id="btn-generate-selected" style="font-size: 0.8rem; padding: 6px 12px; display: none;">🧠 ให้ Gemini คิดคำตอบรายการที่เลือก</button>
+                        </div>
+                    </div>
+
+                    <div style="overflow-x: auto; flex-grow: 1; max-height: 420px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;">
+                        <table class="audit-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px; text-align: center;">
+                                        <input type="checkbox" id="select-all-comments-chk">
+                                    </th>
+                                    <th>ข้อมูลผู้ใช้ & ข้อความ (User & Message)</th>
+                                    <th style="width: 120px; text-align: center;">สิ่งที่ต้องทำ (Task)</th>
+                                    <th>ร่างข้อความตอบกลับ AI (AI Proposed Reply)</th>
+                                    <th style="width: 110px; text-align: center;">คิดคำตอบ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="audit-table-tbody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-secondary); font-style: italic;">
+                                        กรุณาเลือกโพสต์ทางด้านซ้าย และกด "สแกนและวิเคราะห์ความคิดเห็น" เพื่อเริ่มการตรวจสอบ
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
