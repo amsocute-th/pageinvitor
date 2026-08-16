@@ -18,6 +18,8 @@ from bulk_like_and_reply import (
 
 app = Flask(__name__, static_folder='.')
 
+IS_CLOUD = os.getenv("RENDER") is not None
+
 # Thread control variables
 bot_thread = None
 stop_event = threading.Event()
@@ -37,6 +39,8 @@ def progress():
 @app.route('/bot.html')
 @app.route('/bot')
 def bot_page():
+    if IS_CLOUD:
+        return "ระบบ Live Comment Automation ถูกปิดการทำงานบนออนไลน์ชั่วคราวเพื่อความเสถียร กรุณารันบนระบบเครื่อง Local (localhost:8001) เท่านั้น", 403
     return send_from_directory('.', 'bot.html')
 
 @app.route('/tokens.html')
@@ -46,6 +50,8 @@ def tokens_page():
 
 @app.route('/api/posts')
 def get_posts():
+    if IS_CLOUD:
+        return jsonify({"success": False, "error": "ระบบนี้ถูกกำหนดให้ทำงานบนเครื่อง Local เท่านั้น"}), 403
     try:
         days_str = request.args.get('days', '7')
         if days_str == '24h':
@@ -74,6 +80,8 @@ def get_posts():
 
 @app.route('/api/analyze-comments', methods=['POST'])
 def analyze_comments():
+    if IS_CLOUD:
+        return jsonify({"success": False, "error": "ระบบนี้ถูกกำหนดให้ทำงานบนเครื่อง Local เท่านั้น"}), 403
     try:
         data = request.get_json() or {}
         post_ids = data.get('post_ids', [])
@@ -144,6 +152,8 @@ def analyze_comments():
 
 @app.route('/api/start-bot', methods=['POST'])
 def start_bot():
+    if IS_CLOUD:
+        return jsonify({"success": False, "error": "ระบบนี้ถูกกำหนดให้ทำงานบนเครื่อง Local เท่านั้น"}), 403
     global bot_thread, stop_event
     try:
         # Check if already running
@@ -171,6 +181,8 @@ def start_bot():
 
 @app.route('/api/stop-bot', methods=['POST'])
 def stop_bot():
+    if IS_CLOUD:
+        return jsonify({"success": False, "error": "ระบบนี้ถูกกำหนดให้ทำงานบนเครื่อง Local เท่านั้น"}), 403
     global stop_event
     try:
         stop_event.set()
@@ -181,10 +193,14 @@ def stop_bot():
 
 @app.route('/api/status')
 def get_status():
+    if IS_CLOUD:
+        return jsonify({"success": False, "error": "ระบบนี้ถูกกำหนดให้ทำงานบนเครื่อง Local เท่านั้น"}), 403
     return jsonify(stats)
 
 @app.route('/api/daily-records')
 def get_daily_records():
+    if IS_CLOUD:
+        return jsonify({"success": False, "error": "ระบบนี้ถูกกำหนดให้ทำงานบนเครื่อง Local เท่านั้น"}), 403
     import json
     file_path = "daily_records.json"
     if os.path.exists(file_path):

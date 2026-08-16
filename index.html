@@ -163,5 +163,24 @@
             &copy; 2026 RaceGO Management Co.,ltd. All rights reserved.
         </footer>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            if (!isLocal) {
+                // Locate the Live Comment Bot card button
+                const botBtn = document.querySelector('a[href="bot.html"]');
+                if (botBtn) {
+                    botBtn.removeAttribute('href');
+                    botBtn.style.opacity = '0.4';
+                    botBtn.style.cursor = 'not-allowed';
+                    botBtn.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                    botBtn.style.borderColor = 'var(--border-color)';
+                    botBtn.style.color = 'var(--text-secondary)';
+                    botBtn.textContent = '🖥️ รันบน Local เท่านั้น (Local Only)';
+                }
+            }
+        });
+    </script>
 </body>
 </html>
